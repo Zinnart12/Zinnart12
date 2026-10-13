@@ -13,9 +13,13 @@ let renderer, rig, pipeline, resizeObserver;
 let running = false, frameId, lastTime = 0, simulationTime = 0;
 let sampleTime = 0, sampleFrames = 0, fps = 60, readoutAt = 0, lastQualityChange = 0;
 let shaderFailure = null, firstFrame = true;
+let renderNeeded = true;
+const lastRenderedPosition = new THREE.Vector3(Infinity, Infinity, Infinity);
+const lastRenderedOrientation = new THREE.Quaternion();
 
 const ui = createUI(state, {
   parameter(key, value) {
+    if (!key.startsWith('body')) renderNeeded = true;
     if (key === 'radius') state.mass = massFromRadius(value * 1e6);
     else state[key] = value;
     if (key === 'resolution' || key === 'quality') {
@@ -24,7 +28,7 @@ const ui = createUI(state, {
     }
     if (key === 'mass' || key === 'radius') rig?.update(0.1, false, state.mass / REFERENCE_MASS);
   },
-  toggle(key, checked) { state[key] = checked; },
+  toggle(key, checked) { state[key] = checked; renderNeeded = true; },
   mode: setMode,
   view(view) {
     state.autoOrbit = false;
@@ -60,13 +64,14 @@ const ui = createUI(state, {
 });
 
 function setMode(mode) {
+  renderNeeded = true;
   state.mode = mode;
   if (mode === 'scientific') {
     state.spin = 0; state.lensing = 1; state.autoOrbit = false;
     state.exposure = 1.05; state.bloom = true;
     state.quality = 2; state.resolution = 0.85;
   } else if (mode === 'cinematic') {
-    state.temperature = 8000; state.brightness = 1.7; state.exposure = 1.25;
+    state.temperature = 8000; state.brightness = 1.4; state.exposure = 1.1;
     state.bloom = true; state.autoOrbit = !matchMedia('(prefers-reduced-motion: reduce)').matches;
     state.quality = 3; state.resolution = 1;
     rig?.setMode('orbit'); ui.camera('orbit');
@@ -105,7 +110,7 @@ function createPipeline(hdr) {
     uAspect: { value: 1 }, uTanFov: { value: Math.tan(THREE.MathUtils.degToRad(46 / 2)) },
     uRadius: { value: 1 }, uTime: { value: 0 }, uSpin: { value: 0 }, uTilt: { value: 0 },
     uInner: { value: 3 }, uTemperature: { value: 10500 }, uDensity: { value: 1.2 },
-    uBrightness: { value: 1.5 }, uLensing: { value: 1 }, uSteps: { value: 144 },
+    uBrightness: { value: 1.5 }, uLensing: { value: 1 }, uPixelAngle: { value: 0.001 }, uSteps: { value: 144 },
     uDisk: { value: true }, uStars: { value: true }, uNebula: { value: true }, uRing: { value: true },
   };
   const material = new THREE.RawShaderMaterial({ vertexShader, fragmentShader, uniforms, glslVersion: THREE.GLSL3, depthTest: false, depthWrite: false });
@@ -125,6 +130,7 @@ function createPipeline(hdr) {
 
 function resize() {
   if (!renderer || !pipeline || !rig) return;
+  renderNeeded = true;
   const viewport = document.getElementById('viewport');
   const width = Math.max(1, viewport.clientWidth), height = Math.max(1, viewport.clientHeight);
   renderer.setSize(width, height, false);
@@ -140,6 +146,7 @@ function resize() {
   const bw = Math.max(1, Math.floor(pipeline.width / 4)), bh = Math.max(1, Math.floor(pipeline.height / 4));
   pipeline.bloomA.setSize(bw, bh); pipeline.bloomB.setSize(bw, bh);
   pipeline.uniforms.uAspect.value = width / height;
+  pipeline.uniforms.uPixelAngle.value = 2 * pipeline.uniforms.uTanFov.value / pipeline.height;
   pipeline.composite.uniforms.uTexel.value.set(1 / pipeline.width, 1 / pipeline.height);
 }
 
@@ -178,7 +185,7 @@ function render() {
     renderer.setRenderTarget(p.bloomA); renderer.render(p.scene, p.camera);
   }
   p.quad.material = p.composite;
-  p.composite.uniforms.uBloomStrength.value = state.bloom ? (state.mode === 'cinematic' ? 0.55 : 0.23) : 0;
+  p.composite.uniforms.uBloomStrength.value = state.bloom ? (state.mode === 'cinematic' ? 0.32 : 0.14) : 0;
   p.composite.uniforms.uExposure.value = state.exposure;
   renderer.setRenderTarget(null); renderer.render(p.scene, p.camera);
   if (shaderFailure) throw new Error(shaderFailure);
@@ -193,7 +200,15 @@ function animate(now) {
     const initializing = firstFrame;
     if (!state.paused) simulationTime += dt * state.speed;
     rig.update(dt, state.autoOrbit && !state.paused, state.mass / REFERENCE_MASS);
-    try { render(); } catch (error) { fail(error); return; }
+    const cameraChanged = rig.camera.position.distanceToSquared(lastRenderedPosition) > 1e-12
+      || 1 - Math.abs(rig.camera.quaternion.dot(lastRenderedOrientation)) > 1e-12;
+    const didRender = !state.paused || renderNeeded || cameraChanged;
+    if (didRender) {
+      try { render(); } catch (error) { fail(error); return; }
+      renderNeeded = false;
+      lastRenderedPosition.copy(rig.camera.position);
+      lastRenderedOrientation.copy(rig.camera.quaternion);
+    }
     if (firstFrame) { firstFrame = false; ui.ready(); lastQualityChange = now; }
     // Measure actual presentation intervals; exclude tab suspension and initial compilation.
     if (!initializing && elapsed > 0) { sampleTime += elapsed; sampleFrames++; }
@@ -202,7 +217,7 @@ function animate(now) {
       ui.readout(fps, simulationTime, rig.camera.position.length() / (state.mass / REFERENCE_MASS), pipeline.width, pipeline.height, pipeline.hdr);
       readoutAt = now;
     }
-    if (state.autoQuality && now - lastQualityChange > 7000 && fps < 28) {
+    if (state.autoQuality && !state.paused && now - lastQualityChange > 7000 && fps < 28) {
       if (state.resolution > 0.4) state.resolution = Math.max(0.35, Math.round((state.resolution - 0.1) * 100) / 100);
       else if (state.quality > 1) state.quality--;
       else if (state.bloom) state.bloom = false;
@@ -270,6 +285,7 @@ try {
   });
   canvas.addEventListener('webglcontextrestored', () => {
     shaderFailure = null; lastTime = performance.now();
+    renderNeeded = true;
     resize(); running = true; frameId = requestAnimationFrame(animate);
     ui.toast('GPU đã khôi phục. Mô phỏng tiếp tục.');
   });
@@ -288,20 +304,27 @@ try {
   if (new URLSearchParams(location.search).has('test')) {
     window.__observatory = {
       snapshot: () => ({ state: { ...state }, camera: rig.camera.position.toArray(), quaternion: rig.camera.quaternion.toArray(), cameraMode: rig.mode, time: simulationTime, running, hdr: pipeline.hdr, width: pipeline.width, height: pipeline.height, steps: pipeline.uniforms.uSteps.value, shaderFailure, fps }),
-      sample() {
+      setTime(seconds) {
+        if (!Number.isFinite(seconds) || seconds < 0) throw new RangeError('Nonnegative finite test time required.');
+        simulationTime = seconds; renderNeeded = true;
+      },
+      sample({ profile = false } = {}) {
         render();
         const gl = renderer.getContext();
         const width = gl.drawingBufferWidth, height = gl.drawingBufferHeight;
         const pixels = new Uint8Array(width * height * 4);
         gl.readPixels(0, 0, width, height, gl.RGBA, gl.UNSIGNED_BYTE, pixels);
-        let energy = 0, bright = 0, signature = 0;
+        let energy = 0, bright = 0, signature = 0, white = 0;
         for (let i = 0; i < pixels.length; i += 4) {
           const l = pixels[i] + pixels[i + 1] + pixels[i + 2];
           energy += l; if (l > 200) bright++;
+          if (pixels[i] >= 245 && pixels[i + 1] >= 245 && pixels[i + 2] >= 245) white++;
           signature = (signature + l * ((i / 4) % 251 + 1)) % 2147483647;
         }
         const center = ((Math.floor(height / 2) * width) + Math.floor(width / 2)) * 4;
-        return { energy, bright, signature, center: Array.from(pixels.slice(center, center + 3)), width, height, glError: gl.getError() };
+        const rowStart = Math.floor(height / 2) * width * 4;
+        const centerRow = profile ? Array.from({ length: width }, (_, x) => Math.max(...pixels.subarray(rowStart + x * 4, rowStart + x * 4 + 3))) : undefined;
+        return { energy, bright, white, signature, center: Array.from(pixels.slice(center, center + 3)), width, height, centerRow, glError: gl.getError() };
       },
     };
   }

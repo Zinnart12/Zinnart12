@@ -33,5 +33,8 @@ void main() {
   // Gentle vignette; it never adds light to the captured black-hole center.
   vec2 q = vUv * 2.0 - 1.0;
   color *= 1.0 - 0.14 * smoothstep(0.25, 1.6, dot(q, q));
+  // Sub-LSB dithering reduces dark-sky quantization; keep captured black exactly zero.
+  float dither = fract(sin(dot(gl_FragCoord.xy, vec2(12.9898, 78.233))) * 43758.5453) - 0.5;
+  color += dither / 255.0 * smoothstep(0.002, 0.02, luma(color));
   fragColor = vec4(color, 1.0);
 }

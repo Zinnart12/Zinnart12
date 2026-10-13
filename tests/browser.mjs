@@ -2,6 +2,7 @@ import { chromium } from 'playwright';
 import assert from 'node:assert/strict';
 import { spawn } from 'node:child_process';
 import { mkdir, readFile } from 'node:fs/promises';
+import { shadowAngularRadius } from '../src/physics.js';
 
 const base = process.env.TEST_BASE_URL || 'http://127.0.0.1:5174';
 const server = process.env.TEST_BASE_URL ? null : spawn(process.execPath,
@@ -26,6 +27,9 @@ try {
     args: ['--no-sandbox', '--use-angle=swiftshader', '--enable-unsafe-swiftshader', '--disable-dev-shm-usage'],
   });
   const page = await browser.newPage({ viewport: { width: 1280, height: 800 }, acceptDownloads: true });
+  // Software WebGL can take several seconds per frame; allow real interaction
+  // stability waits and use a smaller viewport for the full-resolution presets.
+  page.setDefaultTimeout(90000);
   const errors = [];
   page.on('pageerror', error => errors.push(error.message));
   page.on('console', message => { if (message.type() === 'error') errors.push(message.text()); });
@@ -60,8 +64,9 @@ try {
   const baseline = await sample();
   assert.equal(baseline.glError, 0);
   assert.ok(baseline.bright > 1000, 'the disk actually emits light');
+  assert.ok(baseline.white < baseline.bright * 0.03, 'default exposure preserves plasma detail instead of clipping it to white');
   assert.equal((await snapshot()).hdr, true);
-  passed('WebGL2 shaders compile, HDR framebuffer works, disk renders actual pixels');
+  passed('WebGL2 shaders compile, HDR works and default plasma has under 3% white-clipped bright pixels');
 
   const pausedTime = (await snapshot()).time;
   await frames();
@@ -69,6 +74,7 @@ try {
   assert.equal((await sample()).signature, baseline.signature);
   await page.locator('#pause').click();
   assert.ok(await frames() > 0);
+  assert.notEqual((await sample()).signature, baseline.signature, 'animated plasma actually changes pixels, not just the clock');
   await set('speed', 0.05);
   const slow = await frames(5);
   await set('speed', 4);
@@ -78,6 +84,21 @@ try {
   await set('speed', 1);
   passed('Pause freezes emission and time; Resume and simulation speed advance animation');
 
+  for (const boundary of [4, 8]) {
+    await page.evaluate(t => window.__observatory.setTime(t), boundary - 0.001);
+    const before = await page.evaluate(() => window.__observatory.sample({ profile: true }));
+    await page.evaluate(t => window.__observatory.setTime(t), boundary + 0.001);
+    const after = await page.evaluate(() => window.__observatory.sample({ profile: true }));
+    const error = before.centerRow.reduce((sum, value, i) => sum + Math.abs(value - after.centerRow[i]), 0) / before.width;
+    assert.ok(error < 0.75, `Noise parcel reset is continuous: ${error} average pixel levels`);
+  }
+  await page.evaluate(() => window.__observatory.setTime(600));
+  const oldGas = await sample();
+  await page.evaluate(() => window.__observatory.setTime(601));
+  assert.notEqual((await sample()).signature, oldGas.signature, 'a long-running simulation retains evolving plasma');
+  await page.evaluate(() => window.__observatory.setTime(0));
+  passed('Staggered turbulent parcels reset without visible jumps and keep animating after ten simulation minutes');
+
   for (const [key, low, high] of [['density',0.1,3],['brightness',0.1,3],['exposure',0.3,2]]) {
     await set(key, low); const a = await sample();
     await set(key, high); const b = await sample();
@@ -86,10 +107,11 @@ try {
   }
   passed('Density, brightness and exposure monotonically affect rendered energy');
 
-  for (const [key, low, high] of [['temperature',2500,22000],['spin',0,0.85],['tilt',-35,45],['lensing',0,1]]) {
+  for (const [key, low, high] of [['temperature',2500,22000],['spin',0,0.98],['tilt',-35,45],['lensing',0,1]]) {
     await set(key, low); const a = await sample();
     await set(key, high); const b = await sample();
     assert.notEqual(a.signature, b.signature, `${key} must change actual rendered pixels`);
+    assert.equal(b.glError, 0);
     await set(key, key === 'temperature' ? 8200 : key === 'lensing' ? 1 : 0);
   }
   passed('Temperature, spin, disk tilt and lensing change the rendered image');
@@ -117,16 +139,59 @@ try {
   for (const key of ['disk','stars','nebula','ring','bloom']) await toggle(key, false);
   const dark = await sample();
   assert.ok(dark.center.every(value => value <= 2), 'captured horizon is truly black');
-  for (const key of ['disk','stars','nebula','ring']) {
+  await toggle('ring', true);
+  assert.equal((await sample()).signature, dark.signature, 'photon ring cannot emit a fake outline when the disk is off');
+  for (const key of ['disk','stars','nebula']) {
     await toggle(key, true); const layer = await sample();
     assert.notEqual(layer.signature, dark.signature, `${key} actually adds its layer`);
     await toggle(key, false);
   }
-  for (const key of ['disk','stars','nebula','ring']) await toggle(key, true);
+  await toggle('disk', true); await toggle('ring', false);
+  await set('quality', 4); await set('resolution', 0.6);
+  const directImages = await sample();
+  await toggle('ring', true);
+  const allImages = await sample();
+  assert.notEqual(allImages.signature, directImages.signature, 'real higher-order disk paths contribute to the photon image');
+  await set('quality', 2); await set('resolution', 0.4);
+  for (const key of ['stars','nebula']) await toggle(key, true);
   const noBloom = await sample();
   await toggle('bloom', true);
   assert.ok((await sample()).energy > noBloom.energy);
-  passed('Every scene layer toggles pixels; bloom adds glow; captured center stays black');
+  passed('Scene layers and bloom work; photon images need emitting gas and contain no independent luminous outline');
+
+  for (const key of ['disk','stars','nebula','bloom']) await toggle(key, false);
+  await set('resolution', 0.75);
+  const shadowWidths = [];
+  for (const [mass, quality] of [[4.3, 1], [4.3, 4], [2, 4]]) {
+    await set('mass', mass);
+    await set('quality', quality);
+    const result = await page.evaluate(() => window.__observatory.sample({ profile: true }));
+    const center = Math.floor(result.width / 2);
+    let left = center, right = center;
+    while (left > 0 && result.centerRow[left] <= 2) left--;
+    while (right < result.width - 1 && result.centerRow[right] <= 2) right++;
+    const radius = (right - left - 1) / 2;
+    const observer = Math.hypot(...(await snapshot()).camera) / ((await snapshot()).state.mass / 4.3);
+    const expected = Math.tan(shadowAngularRadius(observer)) * result.height / (2 * Math.tan(23 * Math.PI / 180));
+    assert.ok(Math.abs(radius - expected) < 3, `GPU shadow radius ${radius}px vs finite-observer analytic ${expected}px`);
+    shadowWidths.push(radius);
+  }
+  assert.ok(Math.abs(shadowWidths[0] - shadowWidths[1]) <= 2, 'capture edge converges across quality levels');
+  await set('mass', 4.3);
+  await set('quality', 2); await set('resolution', 0.4);
+  for (const key of ['disk','stars','nebula','bloom']) await toggle(key, true);
+  passed('Rendered GPU capture edge agrees with the analytic finite-observer Schwarzschild shadow');
+
+  await page.locator('#tidal-analysis').evaluate(el => { el.open = true; });
+  assert.ok(Number.parseFloat(await page.locator('#tidal-radius').textContent()) > 7);
+  await set('bodyDistance', 1);
+  assert.ok((await page.locator('#tidal-outcome').textContent()).startsWith('Vượt'));
+  await page.locator('[data-body="probe"]').click();
+  assert.ok((await page.locator('#tidal-outcome').textContent()).startsWith('Chưa vượt'));
+  assert.ok(Number.parseFloat(await page.locator('#tidal-radius').textContent()) < 1);
+  await page.locator('[data-body="earth"]').click(); await set('bodyDistance', 10);
+  await page.locator('#tidal-analysis').evaluate(el => { el.open = false; });
+  passed('Tidal controls distinguish an Earth-sized body from a material-supported probe without automatic destruction');
 
   const cameraBefore = (await snapshot()).camera;
   await page.mouse.move(400, 370);
@@ -159,6 +224,7 @@ try {
   await page.screenshot({ path: 'test-results/edge-view.png' });
   passed('Top, bottom and edge presets reveal different 3D disk projections');
 
+  await page.setViewportSize({ width: 800, height: 600 });
   await page.locator('[data-mode="cinematic"]').click();
   await toggle('autoQuality', false); await set('resolution', 0.4);
   assert.equal((await snapshot()).state.autoOrbit, true);
@@ -224,6 +290,8 @@ try {
   passed('Adaptive quality really reduces resolution under slow software-GPU presentation');
 
   assert.deepEqual(errors, [], 'no JavaScript, shader, network or framebuffer errors');
+  // Release the first GPU workload before compiling/rendering the offline page.
+  await page.close();
   const offline = await browser.newPage({ viewport: { width: 1100, height: 760 } });
   const offlineErrors = [], network = [];
   offline.on('pageerror', e => offlineErrors.push(e.message));
@@ -233,7 +301,7 @@ try {
   // disabled in an about:blank document; no server or external asset can rescue it.
   await offline.goto('about:blank?test');
   await offline.context().setOffline(true);
-  await offline.setContent(await readFile('dist/index.html', 'utf8'));
+  await offline.setContent(await readFile('dist/index.html', 'utf8'), { waitUntil: 'domcontentloaded', timeout: 90000 });
   await offline.waitForFunction(() => window.__observatory && !document.getElementById('loading'), null, { timeout: 90000 });
   await offline.evaluate(() => {
     document.getElementById('autoQuality').click();

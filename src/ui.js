@@ -1,4 +1,4 @@
-import { DEFAULTS, QUALITY_NAMES, RS_PER_MILLION_KM, schwarzschildRadius } from './physics.js';
+import { DEFAULTS, QUALITY_NAMES, RS_PER_MILLION_KM, schwarzschildRadius, tidalAssessment } from './physics.js';
 
 const icons = {
   pause: '<path d="M8 5v14M16 5v14"/>',
@@ -18,7 +18,7 @@ const ranges = [
   ['mass', 'Black hole mass', 'Khối lượng', 0.5, 12, 0.1],
   ['spin', 'Spin', 'Quay xấp xỉ · không phải Kerr', 0, 0.98, 0.01],
   ['tilt', 'Disk inclination', 'Góc nghiêng đĩa', -80, 80, 1],
-  ['temperature', 'Accretion temperature', 'Nhiệt độ đặc trưng tại 3 Rₛ', 2000, 25000, 100],
+  ['temperature', 'Accretion temperature', 'Nhiệt độ đỉnh của profile đĩa zero-torque', 2000, 25000, 100],
   ['density', 'Disk density', 'Mật độ quang học', 0.1, 3, 0.05],
   ['brightness', 'Disk brightness', 'Cường độ phát xạ', 0.1, 4, 0.05],
   ['speed', 'Simulation speed', 'Thời gian chuyển động khí', 0.05, 5, 0.05],
@@ -60,18 +60,27 @@ export function createUI(state, actions) {
               <p class="control-note">Bán kính và khối lượng được liên kết bởi Rₛ = 2GM/c².</p>
               ${range('lensing', 'Lensing strength', '1.0 là Schwarzschild; giá trị khác là thí nghiệm', 0, 1.5, 0.05)}
             </details>
+            <details class="advanced" id="tidal-analysis"><summary>Tidal assessment ${icon('chevron')}</summary>
+              <div class="body-presets" aria-label="Test body"><button data-body="earth">Earth</button><button data-body="rock">Asteroid</button><button data-body="probe">Probe</button></div>
+              ${range('bodyRadiusKm', 'Body radius', 'Bán kính vật thể thử', 0.001, 12000, 0.001)}
+              ${range('bodyDensity', 'Body density', 'Mật độ trung bình · cấu trúc cầu đồng nhất', 500, 20000, 1)}
+              ${range('bodyStrengthMPa', 'Tensile strength', 'Sức bền kéo của vật chất', 0, 1000, 1)}
+              ${range('bodyDistance', 'Body distance', 'Khoảng cách từ tâm hố đen', 0.5, 30, 0.1)}
+              <div class="tidal-report" id="tidal-report" aria-live="polite"></div>
+              <p class="control-note">Ước lượng thủy triều tuyến tính và ứng suất tĩnh của vật thể cầu đồng nhất. Không xác định thời điểm phân mảnh hay tạo hoạt ảnh vỡ.</p>
+            </details>
           </section>
           <section><h3><span class="section-number">02</span> Render settings</h3>
             ${range('quality', 'Gravitational lensing quality', 'Số bước tích phân tia sáng', 1, 4, 1)}
             ${range('resolution', 'Render resolution', 'Tỉ lệ độ phân giải GPU so với viewport', 0.35, 1.5, 0.05)}
-            ${range('exposure', 'Exposure', 'Filmic tone mapping', 0.25, 2.5, 0.05)}
+            ${range('exposure', 'Exposure', 'Filmic tone mapping · giảm về 0.01 cho khí rất nóng', 0.01, 2.5, 0.01)}
             ${toggle('autoQuality', 'Adaptive quality', 'Tự giảm tải khi FPS thấp')}
             ${toggle('bloom', 'Bloom', 'Ánh sáng HDR & soft glow')}
           </section>
           <section><h3><span class="section-number">03</span> Scene layers</h3>
-            ${toggle('disk', 'Accretion disk')}${toggle('stars', 'Starfield')}${toggle('nebula', 'Distant nebula')}${toggle('ring', 'Photon ring')}${toggle('autoOrbit', 'Cinematic orbit', 'Chỉ tự xoay khi bật công tắc này')}
+            ${toggle('disk', 'Accretion disk')}${toggle('stars', 'Starfield')}${toggle('nebula', 'Distant nebula')}${toggle('ring', 'Photon ring', 'Ảnh khí từ tia đi vòng > 180°; không thêm viền sáng')}${toggle('autoOrbit', 'Cinematic orbit', 'Chỉ tự xoay khi bật công tắc này')}
           </section>
-          <div class="physics-note"><span>THE PHYSICS BEHIND THE VIEW</span><p id="physics-description">Tia sáng Schwarzschild được tích phân trong không gian 3D. Đĩa khí, truyền bức xạ và vòng photon dưới pixel là các xấp xỉ trực quan.</p><div>Rₛ = 2GM / c² <span>r<sub>ph</sub> = 1.5 Rₛ</span></div></div>
+          <div class="physics-note"><span>THE PHYSICS BEHIND THE VIEW</span><p id="physics-description"></p><div>Rₛ = 2GM / c² <span>r<sub>ph</sub> = 1.5 Rₛ</span></div><p>Shadow: b<sub>crit</sub> = 2.598 Rₛ ở xa. Đây là bán kính biểu kiến, không phải chân trời hay photon sphere.</p></div>
           <button id="reset-simulation" class="secondary-button">${icon('reset')} Reset simulation</button>
         </div>
         <footer class="panel-footer"><span><i class="live-dot"></i><b id="fps">—</b> FPS</span><span id="render-info">WEBGL 2 · HDR</span></footer>
@@ -94,6 +103,10 @@ export function createUI(state, actions) {
     if (key === 'quality') return `${QUALITY_NAMES[value - 1]} <span>${[96,144,216,320][value - 1]}</span>`;
     if (key === 'resolution') return `${Math.round(value * 100)} <span>%</span>`;
     if (key === 'radius') return `${Number(value).toFixed(2)} <span>million km</span>`;
+    if (key === 'bodyRadiusKm') return `${Number(value).toLocaleString('en-US', { maximumFractionDigits: 3 })} <span>km</span>`;
+    if (key === 'bodyDensity') return `${Math.round(value).toLocaleString('en-US')} <span>kg/m³</span>`;
+    if (key === 'bodyStrengthMPa') return `${value} <span>MPa</span>`;
+    if (key === 'bodyDistance') return `${Number(value).toFixed(1)} <span>Rₛ</span>`;
     return `${Number(value).toFixed(2)}${key === 'speed' ? ' <span>×</span>' : ''}`;
   };
   function updateControl(key, value) {
@@ -117,7 +130,12 @@ export function createUI(state, actions) {
     get('pause').setAttribute('aria-pressed', state.paused);
     const exact = state.spin === 0 && state.lensing === 1;
     get('model-label').textContent = exact ? 'SCHWARZSCHILD NULL GEODESICS' : 'SCHWARZSCHILD · EXPERIMENTAL EFFECTS';
-    get('physics-description').textContent = state.spin > 0 ? 'Quay và biên trong đĩa lấy cảm hứng từ Kerr. Tia sáng và chân trời vẫn là Schwarzschild: không giải metric Kerr hay frame dragging.' : state.lensing !== 1 ? 'Lensing strength khác 1 là thí nghiệm thay đổi độ cong, không phải nghiệm Schwarzschild chính xác. Đặt về 1 để quan sát mô hình chuẩn.' : 'Tia sáng Schwarzschild được tích phân trong không gian 3D. Đĩa khí, truyền bức xạ và vòng photon dưới pixel là các xấp xỉ trực quan.';
+    get('physics-description').textContent = state.spin > 0 ? 'Quay và biên trong đĩa lấy cảm hứng từ Kerr. Tia sáng và chân trời vẫn là Schwarzschild: không giải metric Kerr hay frame dragging.' : state.lensing !== 1 ? 'Lensing strength khác 1 là thí nghiệm thay đổi độ cong, không phải nghiệm Schwarzschild chính xác. Đặt về 1 để quan sát mô hình chuẩn.' : 'Tia sáng Schwarzschild được tích phân trong không gian 3D; ảnh photon hình thành từ khí trên quỹ đạo tia cong. Đĩa và truyền bức xạ là mô hình xấp xỉ.';
+    const tide = tidalAssessment({ blackHoleMass: state.mass, bodyRadius: state.bodyRadiusKm * 1000,
+      bodyDensity: state.bodyDensity, materialStrength: state.bodyStrengthMPa * 1e6, distanceRs: state.bodyDistance });
+    const number = x => x >= 1e4 || x < 0.01 ? x.toExponential(2) : x.toFixed(2);
+    const outcome = tide.overThreshold ? 'Vượt ngưỡng ứng suất tĩnh' : 'Chưa vượt ngưỡng ứng suất tĩnh';
+    get('tidal-report').innerHTML = `<dl><dt>Body mass</dt><dd>${number(tide.bodyMass)} kg</dd><dt>Surface tide · Δa</dt><dd>${number(tide.tidalAcceleration)} m/s²</dd><dt>Self gravity</dt><dd>${number(tide.selfGravity)} m/s²</dd><dt>Tidal stress</dt><dd>${number(tide.tidalStress / 1e6)} MPa</dd><dt>Gravity + strength</dt><dd>${number(tide.supportStress / 1e6)} MPa</dd><dt>Disruption estimate</dt><dd id="tidal-radius">${tide.disruptionRadiusRs.toFixed(3)} Rₛ</dd></dl><p id="tidal-outcome">${outcome}. Ngưỡng ${tide.disruptsOutsideHorizon ? 'ở ngoài' : 'ở trong'} chân trời.${!tide.linearModelValid ? ' Kích thước quá lớn so với khoảng cách: mô hình tuyến tính mất độ tin cậy.' : ''}</p>`;
   }
   for (const input of document.querySelectorAll('[data-param]')) input.addEventListener('input', () => {
     actions.parameter(input.dataset.param, Number(input.value));
@@ -131,6 +149,12 @@ export function createUI(state, actions) {
   for (const button of document.querySelectorAll('[data-view]')) button.addEventListener('click', () => {
     actions.view(button.dataset.view);
     for (const b of document.querySelectorAll('[data-view]')) b.classList.toggle('selected', b === button);
+  });
+  for (const button of document.querySelectorAll('[data-body]')) button.addEventListener('click', () => {
+    const presets = { earth: [6371, 5514, 50], rock: [0.5, 3000, 1], probe: [0.001, 4500, 600] };
+    const [radius, density, strength] = presets[button.dataset.body];
+    actions.parameter('bodyRadiusKm', radius); actions.parameter('bodyDensity', density);
+    actions.parameter('bodyStrengthMPa', strength); sync();
   });
   for (const [id, action] of [['pause','pause'],['reset-simulation','reset'],['reset-camera','resetCamera'],['camera-mode','camera'],['screenshot','screenshot'],['fullscreen','fullscreen']]) get(id).addEventListener('click', () => { actions[action](); sync(); });
   get('help').addEventListener('click', () => get('help-dialog').showModal());
