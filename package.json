@@ -1,5 +1,5 @@
 {
-  "name": "event-horizon-observatory",
+  "name": "cosmic-sandbox",
   "version": "1.0.0",
   "private": true,
   "type": "module",
@@ -7,9 +7,19 @@
     "dev": "vite --host 0.0.0.0",
     "build": "node scripts/build.mjs",
     "preview": "vite preview --host 0.0.0.0",
-    "test": "node --test tests/physics.test.mjs",
-    "test:browser": "node tests/browser.mjs"
+    "test": "node --test tests/physics.test.mjs && node --experimental-strip-types --test tests/cosmic-*.test.ts",
+    "test:browser": "node tests/browser.mjs",
+    "typecheck": "tsc --noEmit",
+    "test:browser:cosmic": "node tests/cosmic-browser.mjs"
   },
-  "dependencies": { "three": "0.180.0" },
-  "devDependencies": { "esbuild": "0.25.12", "playwright": "1.56.1", "vite": "7.1.12" }
+  "dependencies": {
+    "three": "0.180.0"
+  },
+  "devDependencies": {
+    "@types/three": "0.180.0",
+    "esbuild": "0.25.12",
+    "playwright": "1.56.1",
+    "typescript": "5.9.3",
+    "vite": "7.1.12"
+  }
 }

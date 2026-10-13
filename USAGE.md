@@ -1,12 +1,14 @@
 # Event Horizon — Black Hole Observatory
 
+Ứng dụng vũ trụ mới mở từ `index.html`; xem [COSMIC_SANDBOX.md](COSMIC_SANDBOX.md). Phòng quan sát này mở từ `blackhole.html`.
+
 Ứng dụng mô phỏng hố đen 3D bằng Three.js, WebGL2 và GLSL. Toàn bộ đĩa bồi tụ, sao và tinh vân được tạo procedural; không dùng ảnh hố đen hay ảnh đĩa 2D.
 
 ## Chạy ngay bằng một tệp HTML
 
-Mở **`dist/index.html`** bằng Chrome, Edge hoặc Firefox hỗ trợ WebGL2 và hardware acceleration. Tệp này chứa cả Three.js, shader, JavaScript và CSS; không cần server, CDN, kết nối Internet hay API key. Có thể đổi tên thành `black-hole.html` rồi gửi sang máy khác.
+Mở **`dist/blackhole.html`** bằng Chrome, Edge hoặc Firefox hỗ trợ WebGL2 và hardware acceleration. Tệp này chứa cả Three.js, shader, JavaScript và CSS; không cần server, CDN, kết nối Internet hay API key. Có thể đổi tên thành `black-hole.html` rồi gửi sang máy khác.
 
-`index.html` ở gốc là tệp **phát triển**, phải chạy qua Vite. Để tạo lại tệp độc lập:
+`blackhole.html` ở gốc là tệp **phát triển**, phải chạy qua Vite. Để tạo lại tệp độc lập:
 
 ```bash
 cd /workspace/Zinnart12
@@ -24,7 +26,7 @@ npm run dev -- --port 5173
 
 Mở địa chỉ do Vite hiển thị trên máy của bạn. Không cần backend hay dịch vụ khác. Server có hot reload. Không tạo Git worktree để chạy ứng dụng; dùng checkout hiện có vì các tác vụ cloud đã được cách ly.
 
-`npm run preview` phục vụ bản `dist` đã build. `npm run build` dùng esbuild để tạo một tệp HTML độc lập, không tải asset ngoài.
+`npm run preview` phục vụ bản `dist` đã build. `npm run build` dùng esbuild để tạo hai tệp HTML độc lập: `dist/index.html` (Cosmic Sandbox) và `dist/blackhole.html` (phòng quan sát hố đen), không tải asset ngoài.
 
 ## Điều khiển
 

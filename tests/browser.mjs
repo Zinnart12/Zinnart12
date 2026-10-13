@@ -34,7 +34,7 @@ try {
   page.on('pageerror', error => errors.push(error.message));
   page.on('console', message => { if (message.type() === 'error') errors.push(message.text()); });
   page.on('response', response => { if (response.status() >= 400) errors.push(`HTTP ${response.status()} ${response.url()}`); });
-  await page.goto(`${base}/?test`);
+  await page.goto(`${base}/blackhole.html?test`);
   await page.waitForFunction(() => window.__observatory && !document.getElementById('loading'), null, { timeout: 90000 });
   const snapshot = () => page.evaluate(() => window.__observatory.snapshot());
   const sample = () => page.evaluate(() => window.__observatory.sample());
@@ -301,7 +301,7 @@ try {
   // disabled in an about:blank document; no server or external asset can rescue it.
   await offline.goto('about:blank?test');
   await offline.context().setOffline(true);
-  await offline.setContent(await readFile('dist/index.html', 'utf8'), { waitUntil: 'domcontentloaded', timeout: 90000 });
+  await offline.setContent(await readFile('dist/blackhole.html', 'utf8'), { waitUntil: 'domcontentloaded', timeout: 90000 });
   await offline.waitForFunction(() => window.__observatory && !document.getElementById('loading'), null, { timeout: 90000 });
   await offline.evaluate(() => {
     document.getElementById('autoQuality').click();
