@@ -1,0 +1,739 @@
+<!DOCTYPE html>
+<html lang="vi"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>GARGANTUA LAB — Black Hole Simulator</title>
+<style>
+:root{font-family:Inter,system-ui,Segoe UI,sans-serif;color:#e4eaf8;color-scheme:dark}*{box-sizing:border-box}
+html,body{margin:0;width:100%;height:100%;background:#000;overflow:hidden}canvas{display:block}
+#scene{position:fixed;inset:0}#hud{position:fixed;left:24px;top:22px;pointer-events:none;text-shadow:0 2px 8px #000}
+.brand{font-size:11px;letter-spacing:.3em;color:#8aa7da;font-weight:700}.headline{font-weight:700;font-size:26px;margin:5px 0 2px}
+#status{font-size:12px;color:#9daabf;line-height:1.8}#bottom{position:fixed;left:24px;bottom:22px;font-size:12px;color:#8593a9;pointer-events:none;background:#070e18a6;padding:10px 14px;border:1px solid #25344c;border-radius:8px}
+#panel{position:fixed;right:0;top:0;width:334px;max-width:100vw;height:100vh;background:#09101aeE;border-left:1px solid #2c3b4f;backdrop-filter:blur(18px);padding:19px 20px;overflow-y:auto;box-shadow:-15px 0 70px #0008;transition:transform .25s}
+#panel.hide{transform:translateX(100%)}#toggle{position:fixed;right:345px;top:18px;z-index:5;border-radius:9px}
+body:has(#panel.hide) #toggle{right:14px}
+.header{display:flex;justify-content:space-between;align-items:center}.eyebrow{font-size:10px;letter-spacing:2px;color:#92accc}.title{font-size:19px;font-weight:750;margin:7px 0 12px}
+.sep{border-top:1px solid #28384c;margin:17px 0}.group{font-size:10px;color:#8399b5;letter-spacing:1.7px;font-weight:700;margin:15px 0 9px}
+.control{margin:13px 0}.control label{display:flex;justify-content:space-between;gap:7px;font-size:12px;color:#c3cee0;margin-bottom:8px}
+output{color:#e6b877;font-variant-numeric:tabular-nums}input[type=range]{width:100%;accent-color:#e5a05e;cursor:pointer;height:5px}
+button,select{font:inherit;color:#cdd9ea;background:#172235;border:1px solid #35465d;border-radius:7px;padding:9px;cursor:pointer}
+button:hover{background:#2b3e57}button.active{border-color:#e5a05e;color:#f6c797;background:#392820}
+.buttons{display:grid;grid-template-columns:1fr 1fr;gap:7px}.buttons button{font-size:11px}select{width:100%;font-size:12px}
+.stat{display:flex;justify-content:space-between;font-size:12px;padding:5px 0;color:#99a9bf}.stat strong{color:#d8e5f8;font-weight:600}
+.pill{font-size:10px;letter-spacing:.07em;color:#ffca98;background:#2c1d16;padding:5px 8px;border-radius:6px;display:inline-block;margin:7px 0} .note{font-size:11px;line-height:1.55;color:#778aa3;margin-top:13px}
+#err{display:none;position:fixed;left:18px;bottom:85px;right:355px;white-space:pre-wrap;color:#ffbdbd;background:#330d12ef;padding:12px;border:1px solid #a54b5a;border-radius:9px;font-size:12px;max-height:28vh;overflow:auto}
+@media(max-width:700px){#panel{width:300px}#toggle{right:308px}#bottom{font-size:10px;right:12px;left:12px;bottom:9px}#hud{left:14px;top:12px}.headline{font-size:19px}#err{right:10px}}
+.switches{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:12px 0}.switches label{font-size:11px;color:#b3c1d2;display:flex;gap:6px;align-items:center}.switches input{accent-color:#e5a05e}#scienceStats .stat{gap:8px}#scienceStats strong{text-align:right;max-width:59%;overflow-wrap:anywhere}</style></head><body>
+<div id="scene"></div><div id="hud"><div class="brand">ASTROPHYSICS • REAL-TIME LAB</div><div class="headline">GARGANTUA <span style="color:#c48e5b">/</span> 01</div><div id="status">Schwarzschild ray propagation<br>Mass: 4.3 × 10⁶ M☉</div></div>
+<div id="bottom">Kéo trái: xoay · Cuộn: zoom · C: Orbit/Fly · WASD: bay · Shift: tăng tốc · R: đặt lại · H: ẩn UI</div>
+<button id="toggle">☷</button><aside id="panel">
+ <div class="eyebrow">UNIVERSE / SIMULATION</div><div class="title">Black Hole Laboratory</div>
+ <select id="mode"><option value="balanced">Balanced · chất lượng cân bằng</option><option value="scientific">Scientific · vật lý</option><option value="cinematic">Cinematic · điện ảnh</option><option value="performance">Performance · tối ưu</option></select>
+ <div class="group">BLACK HOLE / RENDER</div><div id="controls"></div>
+<div class="group">OBJECT LAB / INITIAL CONDITIONS</div>
+<select id="planetType"><option value="earth">🌍 Earth-like planet</option><option value="rock">🪨 Rocky planet</option><option value="gas">🪐 Gas giant</option><option value="ice">❄️ Ice planet</option><option value="moon">🌙 Moon</option><option value="asteroid">☄️ Asteroid</option><option value="wd">⚪ White dwarf</option><option value="ns">🔵 Neutron star</option></select>
+<select id="orbitType"><option value="elliptic">Elliptical orbit</option><option value="circular">Circular (where stable)</option><option value="plunge">Radial plunge</option><option value="hyperbolic">Hyperbolic flyby</option></select>
+<div id="planetControls"></div>
+<div class="switches">
+<label><input type="checkbox" id="roche" checked> Roche check</label><label><input type="checkbox" id="stretch" checked> Spaghettification</label>
+<label><input type="checkbox" id="pulsar"> Pulsar</label><label><input type="checkbox" id="atmosphere" checked> Atmosphere</label>
+<label><input type="checkbox" id="relativistic" checked> Relativistic visual</label><label><input type="checkbox" id="debris" checked> Debris</label>
+<label><input type="checkbox" id="trails" checked> Orbit trails</label><label><input type="checkbox" id="scientific" checked> Scientific overlay</label>
+</div>
+<div class="pill" id="planetStage">INITIALIZING</div>
+<div class="buttons" id="planetButtons">
+<button id="spawn">✦ Spawn Object</button><button id="spawnMulti">✦ Spawn Multiple</button>
+<button id="resetPlanet">↺ Reset Objects</button><button id="drop">↓ Drop Into BH</button>
+<button id="stable">◎ Stable Orbit</button><button id="approach">↘ Close Approach</button>
+<button id="follow">◉ Cinematic Follow</button><button id="outburst">⚡ Flare / Burst</button></div>
+<div class="group">SIMULATION</div><div class="buttons" id="buttons">
+ <button id="pause">⏸ Pause</button><button id="reset">↺ Reset</button>
+ <button id="disk" class="active">◉ Accretion Disk</button><button id="stars" class="active">✦ Starfield</button>
+ <button id="ring" class="active">◌ Photon Ring</button><button id="cinematic">✧ Camera Orbit</button>
+ <button id="shot">📷 Screenshot</button><button id="full">⛶ Fullscreen</button></div>
+ <div class="group">SCIENTIFIC TELEMETRY</div><div id="scienceStats">
+<div class="stat"><span>Frame rate</span><strong id="fps">--</strong></div>
+<div class="stat"><span>Black hole / Rs</span><strong id="rs">--</strong></div>
+<div class="stat"><span>Photon sphere / ISCO</span><strong id="photon">--</strong></div>
+<div class="stat"><span>Object mass / radius</span><strong id="objectPhys">--</strong></div>
+<div class="stat"><span>Density</span><strong id="objDensity">--</strong></div>
+<div class="stat"><span>Distance / clearance</span><strong id="planetDist">--</strong></div>
+<div class="stat"><span>Orbital velocity</span><strong id="objSpeed">--</strong></div>
+<div class="stat"><span>Tidal Δa</span><strong id="tidalForce">--</strong></div>
+<div class="stat"><span>Roche estimate</span><strong id="rocheRadius">--</strong></div>
+<div class="stat"><span>Integrity</span><strong id="integrity">--</strong></div>
+<div class="stat"><span>Accretion rate</span><strong id="accretion">--</strong></div>
+<div class="stat"><span>Disk luminosity proxy</span><strong id="luminosity">--</strong></div>
+<div class="stat"><span>Objects / active fragments</span><strong id="fragmentStat">--</strong></div>
+<div class="stat"><span>GPU resolution</span><strong id="pix">--</strong></div></div>
+<div class="note">Mô hình xấp xỉ: thế Paczyński–Wiita có ISCO ở 3Rs, lực thủy triều Newton, Roche theo cấu trúc, vật chất vụn tích phân quỹ đạo riêng. Không phải nghiệm Kerr/GR đầy đủ hoặc SPH. Kích thước thiên thể được phóng đại khi vẽ; số liệu dựa trên kích thước thực.</div>
+</aside><div id="err"></div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/0.152.2/three.min.js"></script>
+<script>
+(()=>{'use strict';
+const errorEl=document.getElementById('err');
+const fail=(s)=>{errorEl.style.display='block';errorEl.textContent=String(s);console.error(s)};
+window.addEventListener('error',e=>fail((e.error&&e.error.stack)||e.message));window.addEventListener('unhandledrejection',e=>fail(e.reason));
+if(!window.THREE){fail('Không tải được Three.js. Kiểm tra kết nối internet/CDN.');return}
+const defs=[
+['mass','BH Mass log10(M☉)',1,7,3,.1,' log10 M☉'],
+['spin','Spin (Kerr-inspired)',0,0.98,0.38,.01,' a*'],
+['tilt','Disk Tilt',-80,80,0,1,'°'],
+['temp','Accretion Temperature',0.25,2.7,1.08,.01,' ×'],
+['density','Disk Density',0.1,3,1.25,.05,' ×'],
+['brightness','Disk Brightness',0,5,1.65,.05,' ×'],
+['speed','Simulation Speed',0,5,1,.05,' ×'],
+['lensing','Gravitational Lensing',0,2,1,.05,' ×'],
+['quality','Lensing Quality',16,112,72,8,' steps'],
+['resolution','Render Resolution',0.4,1,0.85,.05,' ×'],
+['exposure','Exposure',0.4,2.6,1.2,.05,' EV scale']
+];
+const state={};let renderDirty=false;
+const ctrl=document.getElementById('controls');
+for(const [k,title,min,max,val,step,suffix] of defs){
+ state[k]=val;const box=document.createElement('div');box.className='control';
+ const label=document.createElement('label');label.textContent=title;const out=document.createElement('output');out.id='out_'+k;out.textContent=val+suffix;label.append(out);
+ const input=document.createElement('input');input.type='range';Object.assign(input,{min,max,step,value:val});input.setAttribute('aria-label',title);
+ input.addEventListener('input',()=>{state[k]=+input.value;out.textContent=(Number.isInteger(state[k])?state[k]:state[k].toFixed(2))+suffix; if(k==='resolution')resize(); if(k==='mass')resetObjects(); updateStats()});
+ box.append(label,input);ctrl.append(box);state['_'+k]=input;
+}
+const planetDefs=[
+['objectMass','Object Mass scale',.1,5,1,.05,' ×'],
+['objectRadius','Object Radius scale',.25,3,1,.05,' ×'],
+['distance','Initial Distance',3,90,24,.5,' Rs'],
+['velocity','Initial Velocity',.05,2,0.85,.05,' × circular'],
+['rocheScale','Roche Threshold',.5,2,1,.05,' ×'],
+['surfaceTemp','Surface Temperature',100,13000,300,50,' K'],
+['fragments','Debris Count',20,480,220,10,''],
+['debrisLife','Debris Lifetime',2,90,30,1,' sim t'],
+['feed','Accretion Feed Rate',.1,4,1,.1,' ×'],
+['orbitalDecay','Orbital Decay Strength',0,4,.5,.1,' ×'],
+['timeScale','Simulation Time Scale',.1,15,2,.1,' t_g /s'],
+['turbulence','Disk Turbulence',.1,4,1.5,.1,' ×'],
+['visualDetail','Visual Detail',.5,3,1.7,.1,' ×'],
+['glow','Glow Intensity',0,3,1.35,.05,' ×'],
+['lighting','Cinematic Lighting',0,3,1.4,.05,' ×']];
+for(const [k,title,min,max,val,step,suffix] of planetDefs){
+ state[k]=val;const box=document.createElement('div');box.className='control';
+ const label=document.createElement('label');label.textContent=title;const out=document.createElement('output');out.textContent=val+suffix;label.append(out);
+ const input=document.createElement('input');input.type='range';Object.assign(input,{min,max,step,value:val});
+ input.addEventListener('input',()=>{state[k]=+input.value;out.textContent=(Number.isInteger(state[k])?state[k]:state[k].toFixed(2))+suffix;});
+ box.append(label,input);document.getElementById('planetControls').append(box);state['_'+k]=input;
+}
+function setV(k,val){state[k]=val;state['_'+k].value=val;state['_'+k].dispatchEvent(new Event('input'))}
+let renderer;try{renderer=new THREE.WebGLRenderer({antialias:false,alpha:false,powerPreference:'high-performance',preserveDrawingBuffer:true});}catch(e){fail('Không tạo được WebGL: '+e);return}
+if(!renderer.capabilities.isWebGL2){fail('Ứng dụng yêu cầu WebGL2. Hãy bật tăng tốc phần cứng của trình duyệt.');return}
+const container=document.getElementById('scene');container.appendChild(renderer.domElement);
+renderer.debug.checkShaderErrors=true;renderer.setClearColor(0x000000);renderer.autoClear=true;renderer.outputColorSpace=THREE.LinearSRGBColorSpace;renderer.toneMapping=THREE.NoToneMapping;
+const camera=new THREE.PerspectiveCamera(49,1,.01,20000);
+let yaw=.3,pitch=.20,dist=11,fly=false,cinematic=false,paused=false,simTime=0;
+const cameraPos=new THREE.Vector3(), target=new THREE.Vector3(), moving={};const clock=new THREE.Clock();
+const geometry=new THREE.PlaneGeometry(2,2),quadCam=new THREE.OrthographicCamera(-1,1,1,-1,0,1),quadScene=new THREE.Scene();
+const commonVertex=`in vec3 position;out vec2 vUv;
+void main(){vUv=position.xy*.5+.5;gl_Position=vec4(position.xy,0.,1.);}`;
+const fragment=`precision highp float;
+in vec2 vUv;out vec4 fragColor;
+uniform vec2 uResolution;
+uniform vec3 uCam,uRight,uUp,uForward;
+uniform float uFov,uTime,uHorizon,uSpin,uTilt,uTemp,uDensity,uBrightness,uLensing,uExposure;
+uniform int uSteps,uDisk,uStars,uRing;
+uniform float uSeed;
+uniform vec3 uPlanet;uniform float uPlanetRadius,uPlanetDamage,uPlanetStretch,uPlanetHeat,uPlanetAngle;
+uniform int uPlanetType,uPlanetVisible;uniform float uTurbulence,uVisualDetail,uLighting;
+#define PI 3.141592653589793
+float hash11(float p){return fract(sin(p*127.1)*43758.5453);}
+float hash31(vec3 p){return fract(sin(dot(p,vec3(127.1,311.7,74.7)))*43758.5453);}
+float noise(vec3 p){
+ vec3 i=floor(p),f=fract(p);f=f*f*(3.-2.*f);
+ return mix(mix(mix(hash31(i),hash31(i+vec3(1,0,0)),f.x),mix(hash31(i+vec3(0,1,0)),hash31(i+vec3(1,1,0)),f.x),f.y),
+ mix(mix(hash31(i+vec3(0,0,1)),hash31(i+vec3(1,0,1)),f.x),mix(hash31(i+vec3(0,1,1)),hash31(i+vec3(1,1,1)),f.x),f.y),f.z);
+}
+float fbm(vec3 p){float v=0.,a=.53;for(int i=0;i<4;i++){v+=a*noise(p);p=p*2.07+vec3(11.8,3.7,1.2);a*=.48;}return v;}
+vec3 diskColor(float t){
+ t=clamp(t,0.,1.5);
+ vec3 red=vec3(0.50,0.023,0.008),orange=vec3(1.0,.22,.028);
+ vec3 gold=vec3(1.5,.68,.16),white=vec3(2.2,1.8,1.22),blue=vec3(1.55,2.05,3.1);
+ vec3 c=mix(red,orange,smoothstep(.02,.35,t));
+ c=mix(c,gold,smoothstep(.28,.70,t));
+ c=mix(c,white,smoothstep(.65,1.1,t));
+ return mix(c,blue,smoothstep(1.1,1.5,t));
+}
+vec3 sky(vec3 d,vec3 p){
+ if(uStars==0)return vec3(.00035,.0005,.001);
+ vec3 q=normalize(d);vec3 n=abs(q);float major=max(n.x,max(n.y,n.z));
+ vec3 face=q/major;vec3 cell=floor(face*330.);
+ float star=hash31(cell+floor(p*.007));
+ float intensity=pow(max(0.,(star-.995)/.005),2.);
+ vec3 id=face*330.-cell-.5;
+ float size=exp(-45.*dot(id,id));
+ vec3 col=mix(vec3(.50,.68,1.),vec3(1.,.72,.43),hash31(cell+32.));
+ vec3 neb=vec3(0.);
+ // Faint galactic clouds are evaluated along the lensed outgoing direction.
+ vec3 np=q*8.+vec3(3.1,1.4,.2);
+ float band=exp(-pow(dot(q,normalize(vec3(.1,.85,.22)))*6.,2.));
+ float fog=smoothstep(.44,.74,fbm(np*1.7))*band;
+ neb=vec3(.010,.015,.037)*fog;
+ return vec3(.00045,.00065,.0011)+neb+col*intensity*size*(.20+hash31(cell+44.)*2.8);
+}
+
+// Procedural physically-inspired planet material; evaluated at ray/ellipsoid hits.
+vec3 planetSurface(vec3 n,vec3 local,vec3 center,float heat,float damage){
+ float mountain=fbm(n*11.0+center*.11);
+ float detail=fbm(n*43.0+vec3(7.0,2.0,8.0));
+ float continents=smoothstep(.42,.63,fbm(n*3.8+vec3(5.2,1.2,7.3))+.13*(mountain-.5));
+ vec3 rock=mix(vec3(.055,.105,.13),vec3(.21,.23,.16),continents);
+ rock=mix(rock,vec3(.34,.30,.23),smoothstep(.65,.86,mountain)*continents*.7);
+ vec3 ice=mix(vec3(.08,.20,.32),vec3(.70,.88,1.10),smoothstep(.36,.7,mountain));
+ vec3 lava=mix(vec3(.065,.045,.037),vec3(.26,.10,.045),mountain);
+ vec3 giant=mix(vec3(.54,.28,.13),vec3(.89,.67,.39),smoothstep(.20,.78,fbm(vec3(n.y*14.0,n.x*3.0+uTime*.03,n.z*3.0))));
+ vec3 asteroid=mix(vec3(.10,.085,.075),vec3(.31,.26,.21),mountain);
+ vec3 base=rock;
+ if(uPlanetType==1)base=lava;
+ else if(uPlanetType==2)base=ice;
+ else if(uPlanetType==3)base=giant;
+ else if(uPlanetType==4)base=asteroid;
+ vec3 toDisk=normalize(vec3(.7,.8,.4)-center*.045);
+ float diffuse=max(.0,dot(n,toDisk))*.68+.13;
+ float rim=pow(1.0-max(0.,dot(n,normalize(uCam-center))),3.2);
+ float cracks=abs(sin(detail*42.0+mountain*27.0));
+ cracks=1.0-smoothstep(.015,.15,cracks);
+ float fracture=cracks*smoothstep(.08,.7,damage);
+ vec3 hot=(uPlanetType==2?vec3(.2,.65,1.4):vec3(2.6,.38,.035));
+ float lavaRivers=(uPlanetType==1?pow(max(.0,1.0-abs(sin(mountain*26.0+detail*4.0))),12.0)*.8:0.0);
+ vec3 emission=hot*(fracture*damage*2.4+lavaRivers+pow(heat,2.0)*(.16+.26*detail));
+ float clouds=uPlanetType==0?smoothstep(.55,.71,fbm(n*16.0+vec3(uTime*.016,0.,0.)))*.25:0.;
+ return (base+vec3(clouds))*(diffuse+rim*.28*uLighting)+emission*uLighting;
+}
+
+mat3 tiltMatrix(float a){float c=cos(a),s=sin(a);return mat3(1.,0.,0.,0.,c,s,0.,-s,c);}
+void main(){
+ vec2 xy=(vUv*2.-1.);xy.x*=uResolution.x/uResolution.y;
+ vec3 d=normalize(uForward+xy.x*uRight*uFov+xy.y*uUp*uFov);
+ vec3 p=uCam;
+ float h=uHorizon;
+ float b=length(cross(p,d));
+ float alpha=0.;
+ vec3 light=vec3(0.);
+ float opacity=0.;
+ float minR=1e6;
+ bool captured=false;bool planetHit=false;
+ float planetA=0.;vec3 planetRGB=vec3(0.);
+ mat3 diskRot=tiltMatrix(uTilt);
+ // Approximate Schwarzschild optical curvature integrated along actual 3D rays.
+ // uHorizon is normalized Rs. b is constant in spherical Schwarzschild.
+ for(int i=0;i<128;i++){
+  if(i>=uSteps)break;
+  float r=length(p);minR=min(minR,r);
+  if(r<=h*1.005){captured=true;break;}
+  if(r>125. && i>4)break;
+  float ds=clamp(r*.065,.025,1.15);
+  ds=min(ds,max(.012,(r-h)*.23));
+  // Photon trajectory correction, radial acceleration projected normal to d.
+  // Newtonian 2x gravitational deflection in weak field; non-linear near horizon.
+  vec3 radial=p/max(r,.001);
+  float projection=dot(radial,d);
+  vec3 perpendicular=radial-projection*d;
+  float boost=1.+min(3.5,1.4*h/max(.08,r-h));
+  float gravity=1.5*h*b*b/(r*r*r*r)*boost*max(uLensing,0.);
+  vec3 dNext=normalize(d-gravity*perpendicular*ds/max(.16,b*b/(r*r)+.02));
+  // Subtle spin frame dragging approximation (NOT exact Kerr).
+  vec3 axis=normalize(diskRot*vec3(0,1,0));
+  dNext=normalize(dNext+uSpin*.009*h*h*cross(axis,p)*ds/(r*r*r+.01));
+  vec3 nextP=p+(.5*(d+dNext))*ds;
+  if(uPlanetVisible==1 && !planetHit){
+   vec3 segment=nextP-p;
+   float segLen=length(segment);
+   vec3 axis=normalize(uPlanet);
+   vec3 off=p-uPlanet;
+   float axStretch=1.+uPlanetStretch*uPlanetDamage*2.2;
+   
+   // Closest-approach test on the actual curved photon segment, followed by ellipsoid intersection.
+   vec3 ia=normalize(cross(axis,vec3(.02,1.,.01)));vec3 ib=normalize(cross(axis,ia));
+   mat3 basis=mat3(axis,ia,ib);
+   vec3 rayStart=transpose(basis)*off;
+   vec3 rayDir=transpose(basis)*normalize(segment);
+   rayStart.x/=axStretch;rayDir.x/=axStretch;
+   float A=dot(rayDir,rayDir),B=2.*dot(rayStart,rayDir),C=dot(rayStart,rayStart)-uPlanetRadius*uPlanetRadius;
+   float disc=B*B-4.*A*C;
+   if(disc>=0.){
+    float t=(-B-sqrt(disc))/(2.*A);
+    if(t>=0. && t<=segLen){
+     vec3 local=rayStart+rayDir*t;
+     vec3 normal=normalize(basis*vec3(local.x/axStretch,local.y,local.z));
+     float breakup=clamp((uPlanetDamage-.40)*1.7,0.,.98);
+     float fragmented=fbm(local*18.+vec3(uTime*.08));
+     if(fragmented>breakup*.55 || uPlanetDamage<.50){
+      planetRGB=planetSurface(normal,local,uPlanet,uPlanetHeat,uPlanetDamage);
+      planetA=1.-breakup*.62;
+      planetHit=true;
+     }
+    }
+   }
+  }
+  if(uDisk==1){
+   vec3 mid=diskRot*((p+nextP)*.5);
+   float rr=length(mid.xz)/h;
+   float z=abs(mid.y)/h;
+   float inn=2.65-0.55*uSpin, outer=13.0;
+   if(rr>inn && rr<outer && z<.25){
+    float ang=atan(mid.z,mid.x);
+    float speed=pow(max(rr,1.),-1.5);
+    float twist=ang+(3.5+.8*uTurbulence)*log(max(rr,1.))+uTime*(.9*speed+.035);
+    float filaments=fbm(vec3(twist*5.5*uTurbulence,rr*1.8, uTime*.035));
+    float fine=noise(vec3(twist*35.,rr*8.*uVisualDetail,uTime*.085));
+    float lanes=.42+.95*smoothstep(.23,.79,filaments)+.23*fine;
+    float thick=.065+.018*rr;
+    float vertical=exp(-pow(z/thick,2.)*1.35);
+    float inner=smoothstep(inn,inn+.5,rr),outerMask=1.-smoothstep(outer-2.,outer,rr);
+    float material=uDensity*lanes*vertical*inner*outerMask;
+    // Orbital velocity projected onto photon direction controls Doppler beaming.
+    vec3 tangLocal=normalize(vec3(-mid.z,0.,mid.x));
+    vec3 velocity=transpose(diskRot)*tangLocal;
+    float beta=clamp(.64/sqrt(max(rr,1.)),0.,.68);
+    float mu=dot(velocity,-d);
+    float doppler=sqrt(1.-beta*beta)/max(.35,1.-beta*mu);
+    float temp=clamp(uTemp*(.44+2.9/pow(rr,.78))*pow(doppler,.80),0.,1.5);
+    float beaming=pow(doppler,3.0);
+    float gravRed=sqrt(max(.06,1.-1./max(rr,1.01)));
+    vec3 emission=diskColor(temp*gravRed)*material*beaming*uBrightness;
+    float tau=material*ds*.48/h;
+    float absorb=1.-exp(-tau);
+    light+=(1.-opacity)*emission*absorb*.85;
+    opacity+=(1.-opacity)*absorb;
+   }
+  }
+  p=nextP;d=dNext;
+  if(opacity>.996)break;
+ }
+ vec3 bg=captured?vec3(0.):sky(d,p+uCam*.3);
+ vec3 color=light+(1.-opacity)*bg;
+ if(planetHit) color=mix(color,planetRGB,planetA);
+ if(uRing==1){
+  // Higher-order light near the critical impact parameter (bcrit=3sqrt(3)/2 Rs).
+  // Glow only for rays that skim the photon sphere; the central shadow stays dark.
+  float bc=2.598076*h;
+  float ring=exp(-pow((b-bc)/(.047*h),2.));
+  float viewBright=.68+.32*cos(atan(d.y,d.x)*2.0);
+  color+=vec3(1.7,.91,.46)*ring*viewBright*.42*(captured?.20:1.);
+ }
+ fragColor=vec4(max(color,vec3(0.)),1.);
+}`;
+const uniforms={uResolution:{value:new THREE.Vector2(1,1)},uCam:{value:new THREE.Vector3()},uRight:{value:new THREE.Vector3()},uUp:{value:new THREE.Vector3()},uForward:{value:new THREE.Vector3()},uFov:{value:Math.tan(49*Math.PI/360)},uTime:{value:0},
+uHorizon:{value:1},uSpin:{value:0},uTilt:{value:0},uTemp:{value:1},uDensity:{value:1},uBrightness:{value:1},uLensing:{value:1},uExposure:{value:1},uSteps:{value:72},uDisk:{value:1},uStars:{value:1},uRing:{value:1},uSeed:{value:1},
+uPlanet:{value:new THREE.Vector3(7,0,0)},uPlanetRadius:{value:.43},uPlanetDamage:{value:0},uPlanetStretch:{value:1},uPlanetHeat:{value:0},uPlanetAngle:{value:0},
+uPlanetType:{value:0},uPlanetVisible:{value:1},uTurbulence:{value:1.4},uVisualDetail:{value:1.5},uLighting:{value:1.2}};
+const simulation=new THREE.RawShaderMaterial({vertexShader:commonVertex,fragmentShader:fragment,glslVersion:THREE.GLSL3,uniforms,depthTest:false,depthWrite:false});
+const quad=new THREE.Mesh(geometry,simulation);quad.frustumCulled=false;quadScene.add(quad);
+const blurFragment=`precision highp float;in vec2 vUv;out vec4 fragColor;
+uniform sampler2D tSource;uniform vec2 stepUV;uniform float threshold;
+void main(){
+ vec3 sum=vec3(0.);
+ for(int i=-4;i<=4;i++){
+  vec3 c=texture(tSource,vUv+float(i)*stepUV).rgb;
+  if(threshold>0.)c=max(c-vec3(threshold),vec3(0.));
+  sum+=c*exp(-.5*float(i*i)/5.);
+ }
+ fragColor=vec4(sum/5.28,1.);
+}`;
+const compositeFragment=`precision highp float;in vec2 vUv;out vec4 fragColor;
+uniform sampler2D tMain,tBloom;uniform float exposure,bloom;
+vec3 filmic(vec3 x){x=max(vec3(0.),x-.004);return (x*(6.2*x+.5))/(x*(6.2*x+1.7)+.06);}
+void main(){vec3 c=texture(tMain,vUv).rgb+bloom*texture(tBloom,vUv).rgb;
+ c=filmic(c*exposure);c=pow(clamp(c,0.,1.),vec3(1./2.2));
+ float vignette=1.-.12*pow(length(vUv-.5)*1.4,2.);
+ fragColor=vec4(c*vignette,1.);}`;
+const blurU={tSource:{value:null},stepUV:{value:new THREE.Vector2()},threshold:{value:0}};
+const blurMat=new THREE.RawShaderMaterial({vertexShader:commonVertex,fragmentShader:blurFragment,glslVersion:THREE.GLSL3,uniforms:blurU,depthTest:false,depthWrite:false});
+const compU={tMain:{value:null},tBloom:{value:null},exposure:{value:1.2},bloom:{value:1}};
+const compMat=new THREE.RawShaderMaterial({vertexShader:commonVertex,fragmentShader:compositeFragment,glslVersion:THREE.GLSL3,uniforms:compU,depthTest:false,depthWrite:false});
+const createTarget=(w,h)=>new THREE.WebGLRenderTarget(w,h,{type:THREE.HalfFloatType,minFilter:THREE.LinearFilter,magFilter:THREE.LinearFilter,depthBuffer:false,stencilBuffer:false});
+let mainRT=createTarget(16,16),blurA=createTarget(8,8),blurB=createTarget(8,8),w=0,h=0;
+function resize(){const dpr=Math.min(window.devicePixelRatio||1,1.5);const scale=state.resolution*dpr;
+ w=Math.max(16,Math.round(innerWidth*scale));h=Math.max(16,Math.round(innerHeight*scale));
+ renderer.setPixelRatio(1);renderer.setSize(innerWidth,innerHeight,false);mainRT.setSize(w,h);blurA.setSize(Math.max(8,w>>2),Math.max(8,h>>2));blurB.setSize(Math.max(8,w>>2),Math.max(8,h>>2));
+ uniforms.uResolution.value.set(w,h);document.getElementById('pix').textContent=w+' × '+h;
+ camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();
+}window.addEventListener('resize',resize);
+const tempForward=new THREE.Vector3(),tempRight=new THREE.Vector3(),tempUp=new THREE.Vector3();
+function resetCamera(){yaw=.26;pitch=.16;dist=11;fly=false;cinematic=false;document.getElementById('cinematic').classList.remove('active');updateCamera(0)}
+function updateCamera(dt){
+ if(!fly){dist=Math.max(2.7,dist);cameraPos.set(dist*Math.cos(pitch)*Math.sin(yaw),dist*Math.sin(pitch),dist*Math.cos(pitch)*Math.cos(yaw));camera.position.copy(cameraPos);camera.lookAt(0,0,0);}
+ else{
+  camera.rotation.order='YXZ';camera.rotation.set(-pitch,yaw+Math.PI,0);
+  camera.getWorldDirection(tempForward);
+  tempRight.set(1,0,0).applyQuaternion(camera.quaternion);
+  const step=(moving.ShiftLeft||moving.ShiftRight?16:4.5)*dt;
+  if(moving.KeyW)camera.position.addScaledVector(tempForward,step);
+  if(moving.KeyS)camera.position.addScaledVector(tempForward,-step);
+  if(moving.KeyA)camera.position.addScaledVector(tempRight,-step);
+  if(moving.KeyD)camera.position.addScaledVector(tempRight,step);
+  if(moving.Space)camera.position.y+=step;if(moving.ControlLeft)camera.position.y-=step;
+  if(camera.position.length()<1.2)camera.position.setLength(1.2);
+ }
+ camera.updateMatrixWorld();
+ camera.getWorldDirection(tempForward);
+ tempRight.setFromMatrixColumn(camera.matrixWorld,0);
+ tempUp.setFromMatrixColumn(camera.matrixWorld,1);
+ uniforms.uCam.value.copy(camera.position);uniforms.uForward.value.copy(tempForward);uniforms.uRight.value.copy(tempRight);uniforms.uUp.value.copy(tempUp);
+}
+let dragging=false,lastX=0,lastY=0;
+renderer.domElement.addEventListener('pointerdown',e=>{if(e.button!==0)return;dragging=true;lastX=e.clientX;lastY=e.clientY;renderer.domElement.setPointerCapture(e.pointerId)});
+renderer.domElement.addEventListener('pointerup',()=>dragging=false);renderer.domElement.addEventListener('pointercancel',()=>dragging=false);
+renderer.domElement.addEventListener('pointermove',e=>{if(!dragging)return;
+ const dx=e.clientX-lastX,dy=e.clientY-lastY;lastX=e.clientX;lastY=e.clientY;
+ yaw-=dx*.0045;pitch=Math.max(-1.53,Math.min(1.53,pitch+dy*.0045));});
+renderer.domElement.addEventListener('wheel',e=>{e.preventDefault();
+ if(fly){camera.position.addScaledVector(tempForward,-e.deltaY*.012);if(camera.position.length()<1.2)camera.position.setLength(1.2)}
+ else dist=Math.max(2.7,Math.min(105,dist*Math.exp(e.deltaY*.001)));},{passive:false});
+window.addEventListener('keydown',e=>{if(['INPUT','SELECT'].includes(document.activeElement.tagName))return;
+ moving[e.code]=true;if(['Space','ArrowUp','ArrowDown'].includes(e.code))e.preventDefault();
+ if(e.repeat)return;
+ if(e.code==='KeyR')resetCamera();
+ if(e.code==='KeyC'){fly=!fly;if(fly){updateCamera(0)}else{const v=camera.position;dist=Math.max(2.7,v.length());yaw=Math.atan2(v.x,v.z);pitch=Math.asin(v.y/dist)}updateStats()}
+ if(e.code==='KeyH')document.getElementById('panel').classList.toggle('hide');
+});window.addEventListener('keyup',e=>moving[e.code]=false);window.addEventListener('blur',()=>{dragging=false;for(const k in moving)moving[k]=false});
+
+
+// Physical state uses SI masses/radii and rs-normalized positions, t_g = Rs/c.
+// Paczynski-Wiita potential: Phi = -GM/(r-Rs); circular ISCO at r=3Rs.
+const G=6.67430e-11,C=299792458,MS=1.98847e30,ME=5.9722e24,RE=6371000;
+const specs={
+ earth:{m:ME,r:RE,k:1.40,c:0x5b9bc6,mat:0,atm:true},
+ rock:{m:ME*.52,r:RE*.8,k:1.25,c:0xb49276,mat:0,atm:false},
+ gas:{m:1.898e27,r:69911000,k:2.25,c:0xe2a76c,mat:3,atm:true},
+ ice:{m:8.681e25,r:25362000,k:1.85,c:0x9cd7f5,mat:2,atm:true},
+ moon:{m:7.342e22,r:1737400,k:1.28,c:0xa5a29b,mat:4,atm:false},
+ asteroid:{m:1e19,r:110000,k:1.1,c:0x8e857f,mat:4,atm:false},
+ wd:{m:MS*.6,r:7000000,k:1.15,c:0xcbdcfb,mat:5,atm:false},
+ ns:{m:MS*1.4,r:12000,k:1.05,c:0xa3bdff,mat:6,atm:false}
+};
+const checked=id=>document.getElementById(id).checked, objects=[], MAX_OBJS=15,MAX_FRAG=480;
+let selected=null,followEnabled=false,accretedMass=0,accretionRate=0,diskEnergy=0,burst=0;
+let lastBH=NaN, lastMass=0;
+const visualScene=new THREE.Scene(), sphereGeo=new THREE.SphereGeometry(1,44,28);
+const objectVertex=`varying vec3 vN;varying vec3 vP;uniform float deformation;uniform vec3 axis;
+void main(){vec3 p=position;vec3 n=normalize(axis);float dotp=dot(p,n);p+=n*dotp*deformation*.9;
+vN=normalize(normalMatrix*normal);vP=position;gl_Position=projectionMatrix*modelViewMatrix*vec4(p,1.);}`;
+const objectFragment=`precision highp float;varying vec3 vN,vP;
+uniform float heat,damage,phase,time,hotness;uniform int type;
+float hash(vec3 p){return fract(sin(dot(p,vec3(127.1,311.7,74.7)))*43758.5453);}
+float noise(vec3 p){vec3 i=floor(p),f=fract(p);f=f*f*(3.-2.*f);return mix(mix(mix(hash(i),hash(i+vec3(1,0,0)),f.x),mix(hash(i+vec3(0,1,0)),hash(i+vec3(1,1,0)),f.x),f.y),mix(mix(hash(i+vec3(0,0,1)),hash(i+vec3(1,0,1)),f.x),mix(hash(i+vec3(0,1,1)),hash(i+vec3(1,1,1)),f.x),f.y),f.z);}
+void main(){
+ vec3 n=normalize(vN), p=normalize(vP);
+ float h=noise(p*8.)*.6+noise(p*21.)*.24+noise(p*55.)*.16;
+ vec3 base=mix(vec3(.07,.22,.36),vec3(.18,.31,.12),smoothstep(.4,.60,h));
+ if(type==1)base=mix(vec3(.23,.12,.08),vec3(.40,.27,.19),h);
+ if(type==2)base=mix(vec3(.11,.34,.55),vec3(.64,.83,.99),h);
+ if(type==3)base=mix(vec3(.54,.30,.18),vec3(.99,.77,.48),smoothstep(.27,.75,noise(vec3(p.y*32.,p.x*3.+time*.04,p.z*3.))));
+ if(type==4)base=mix(vec3(.14,.13,.12),vec3(.41,.38,.33),h);
+ if(type==5)base=vec3(.78,.85,1.2);
+ if(type==6)base=vec3(.47,.64,1.1);
+ float cracks=pow(1.-abs(sin(noise(p*38.)*48.+noise(p*12.)*24.)),28.);
+ float emiss=cracks*damage*(type==2?1.6:3.2)+heat*heat*.7;
+ vec3 plasma=type==2?vec3(.30,.7,1.8):vec3(2.1,.35,.045);
+ if(type>=5)plasma=vec3(.45,.65,2.1);
+ float lit=.20+.8*max(dot(n,normalize(vec3(.5,.65,1.))),0.);
+ float rim=pow(1.-abs(dot(n,vec3(0.,0.,1.))),2.5);
+ vec3 col=base*lit+(emiss*plasma)*hotness+rim*.20*hotness;
+ gl_FragColor=vec4(col,1.);
+}`;
+const atmoGeo=new THREE.SphereGeometry(1,32,20);
+const debrisGeo=new THREE.IcosahedronGeometry(1,1);
+const fragmentMaterial=new THREE.MeshBasicMaterial({color:0xffbb7d,vertexColors:true,transparent:true,opacity:.93,depthWrite:false});
+const fragmentMesh=new THREE.InstancedMesh(debrisGeo,fragmentMaterial,MAX_FRAG);fragmentMesh.count=0;fragmentMesh.frustumCulled=false;fragmentMesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);visualScene.add(fragmentMesh);
+const dummy=new THREE.Object3D(),fragColor=new THREE.Color(),fragments=[];
+const trailsGroup=new THREE.Group();visualScene.add(trailsGroup);
+const tmpA=new THREE.Vector3(),tmpB=new THREE.Vector3();
+const horizonSize=()=>1; // All simulation coordinates are normalized by current Rs.
+const bhMass=()=>Math.pow(10,state.mass)*MS;
+const rsMeters=()=>2*G*bhMass()/(C*C);
+const rgTime=()=>rsMeters()/C;
+function circularSpeed(r){return Math.sqrt(Math.max(0,.5*r))/Math.max(.02,r-1);}
+function rocheRadius(o){
+ const sp=specs[o.kind], k=sp.k*state.rocheScale;
+ return k*o.radiusM/rsMeters()*Math.cbrt(bhMass()/Math.max(1,o.massKg));
+}
+function grav(pos,out){
+ const r=Math.max(1.0005,pos.length());
+ // a in (Rs, tg=Rs/c) units; pseudopotential with Schwarzschild ISCO
+ return out.copy(pos).multiplyScalar(-.5/((r-1)*(r-1)*r));
+}
+function newObject(kind,offset=0,orbit=document.getElementById('orbitType').value){
+ const sp=specs[kind],massKg=sp.m*state.objectMass,radiusM=sp.r*state.objectRadius;
+ const theta=offset*2.39996,dist0=state.distance*(1+.12*Math.sin(offset*2.3));
+ const pos=new THREE.Vector3(dist0*Math.cos(theta),Math.sin(offset*.67)*dist0*.16,dist0*Math.sin(theta));
+ const rad=pos.clone().normalize(),tan=new THREE.Vector3(-rad.z,.018*Math.cos(offset),rad.x).normalize();
+ let vel=circularSpeed(dist0)*state.velocity;
+ if(orbit==='circular')vel=circularSpeed(dist0);
+ if(orbit==='plunge')vel=.18*circularSpeed(dist0);
+ if(orbit==='hyperbolic')vel=1.55*circularSpeed(dist0);
+ const vv=tan.multiplyScalar(vel);
+ if(orbit==='plunge')vv.addScaledVector(rad,-.12);
+ if(orbit==='hyperbolic')vv.addScaledVector(rad,-.10);
+ const rDraw=Math.max(.12,Math.min(.62,.18+.12*Math.log10(1+radiusM/12000)));
+ const mat=new THREE.ShaderMaterial({vertexShader:objectVertex,fragmentShader:objectFragment,uniforms:{
+ deformation:{value:0},axis:{value:new THREE.Vector3(1,0,0)},heat:{value:0},damage:{value:0},phase:{value:0},time:{value:0},hotness:{value:state.lighting},type:{value:sp.mat}}});
+ const mesh=new THREE.Mesh(sphereGeo,mat);mesh.scale.setScalar(rDraw);visualScene.add(mesh);
+ const atm=new THREE.Mesh(atmoGeo,new THREE.MeshBasicMaterial({color:sp.c,transparent:true,opacity:.12,depthWrite:false,blending:THREE.AdditiveBlending,side:THREE.BackSide}));
+ atm.scale.setScalar(rDraw*1.18);visualScene.add(atm);
+ const jetGeom=new THREE.CylinderGeometry(.035,.22,8,12,1,true);
+ const jetMat=new THREE.MeshBasicMaterial({color:0x9ccfff,transparent:true,opacity:.20,blending:THREE.AdditiveBlending,depthWrite:false,side:THREE.DoubleSide});
+ const jet=new THREE.Group();for(const sign of [-1,1]){
+  const part=new THREE.Mesh(jetGeom,jetMat);part.position.y=4.0*sign;jet.add(part);
+ }visualScene.add(jet);
+ const tarr=new Float32Array(160*3),geo=new THREE.BufferGeometry();geo.setAttribute('position',new THREE.BufferAttribute(tarr,3));geo.setDrawRange(0,0);
+ const line=new THREE.Line(geo,new THREE.LineBasicMaterial({color:sp.c,transparent:true,opacity:.50,depthWrite:false}));trailsGroup.add(line);
+ const o={kind,massKg,radiusM,pos,vel:vv,mesh,atm,jet,line,tarr,trailN:0,rDraw,integrity:1,damage:0,heat:0,lost:0,phase:0,absorbed:false,drawn:true,angle:0,tidal:0,roche:0};
+ objects.push(o);selected=o;return o;
+}
+function clearObjects(){
+ for(const o of objects){visualScene.remove(o.mesh,o.atm,o.jet);trailsGroup.remove(o.line);o.mesh.material.dispose();o.atm.material.dispose();o.line.geometry.dispose();o.line.material.dispose();}
+ objects.length=0;fragments.length=0;selected=null;
+}
+function spawnOne(){if(objects.length>=MAX_OBJS)return;return newObject(document.getElementById('planetType').value,objects.length);}
+function resetObjects(){clearObjects();accretedMass=0;accretionRate=0;diskEnergy=0;burst=0;spawnOne();}
+function feedDebris(o,massRatio=1,n=1){
+ if(!checked('debris')){diskEnergy+=massRatio*.0002;return;}
+ const maxCount=Math.round(state.fragments);
+ for(let k=0;k<n && fragments.length<maxCount;k++){
+ const axis=o.pos.clone().normalize(),random=new THREE.Vector3(Math.random()-.5,Math.random()-.5,Math.random()-.5).normalize();
+ const p=o.pos.clone().addScaledVector(random,o.rDraw*(.5+Math.random()));
+ const scale=.015+Math.random()*.053;
+ // Initial debris receives original specific angular momentum + tidal differential velocity.
+ const v=o.vel.clone().addScaledVector(axis,(Math.random()-.5)*.085*state.rocheScale).addScaledVector(random,(Math.random()-.5)*.06);
+ const f={p,v,t:0,life:state.debrisLife*(.5+Math.random()*.7),massKg:o.massKg*Math.max(1e-6,massRatio)/Math.max(1,n),scale,kind:o.kind};
+ fragments.push(f);
+ }
+}
+function transfer(o,fraction,dt){
+ const dm=Math.min(o.massKg*(o.integrity*.5),o.massKg*fraction);
+ if(dm<=0)return;
+ o.integrity=Math.max(0,o.integrity-dm/o.massKg);
+ const n=Math.max(1,Math.min(10,Math.ceil(fraction*400)));
+ feedDebris(o,dm/o.massKg,n);
+ if(o.integrity<=.005)o.integrity=0;
+}
+function integrateParticle(p,v,dt){
+ // Kick-drift-kick, bounded near horizon.
+ grav(p,tmpA);v.addScaledVector(tmpA,.5*dt);
+ p.addScaledVector(v,dt);grav(p,tmpA);v.addScaledVector(tmpA,.5*dt);
+}
+function stepPhysics(seconds){
+ const tau=Math.min(1.6,seconds*state.timeScale*state.speed),segments=Math.max(1,Math.ceil(tau/.03)),dt=tau/segments;
+ let dmTick=0;
+ for(let n=0;n<segments;n++){
+ for(const o of objects){
+ if(o.absorbed)continue;
+ const r=o.pos.length(),lim=rocheRadius(o);
+ o.roche=lim;
+ const accel=2*G*bhMass()*o.radiusM/(Math.pow(Math.max(r,1)*rsMeters(),3));
+ const binding=G*o.massKg/(o.radiusM*o.radiusM);
+ o.tidal=accel;
+ // Threshold compares differential gravity with material cohesion/self-gravity.
+ // Compact stars are allowed to plunge intact if r_t < Rs.
+ const stress=checked('roche')?Math.pow(lim/Math.max(1,r),3):0;
+ const margin=Math.max(0,(stress-.22));
+ if(stress>.22){o.phase=Math.max(o.phase,1);o.heat=Math.min(1,o.heat+dt*margin*.035);}
+ if(stress>1){o.phase=Math.max(o.phase,2);
+    const rate=(Math.pow(Math.max(0,stress-1),.65)*.016*state.feed);
+    transfer(o,rate*dt,dt);
+    o.damage=Math.min(1,1-o.integrity);
+ }
+ // Atmospheric stripping precedes major mass loss.
+ if(stress>.45 && specs[o.kind].atm)o.atm.material.opacity=Math.max(.01,.12*(1-Math.min(.99,(stress-.45)*.4)));
+ if(o.integrity<.55)o.phase=Math.max(o.phase,3);
+ if(r<=1.005 || (!Number.isFinite(r))){o.absorbed=true;o.phase=5;dmTick+=o.massKg*o.integrity;o.integrity=0;if(o.roche>1.02)burst=Math.max(burst,.6);continue;}
+ // Dynamical friction only if interacting with the accretion disc, otherwise tiny GR-inspired radiation loss for compact binaries.
+ const withinDisk=r<13 && Math.abs(o.pos.y)<.35*r;
+ const compact=(o.kind==='wd'||o.kind==='ns');
+ const radiation=compact?Math.min(.003,.00002*(o.massKg/bhMass())*Math.pow(10/Math.max(1.02,r),3)):0;
+ const drag=(withinDisk?.00012*state.orbitalDecay:0)+radiation;
+ o.vel.multiplyScalar(Math.exp(-drag*dt));
+ integrateParticle(o.pos,o.vel,dt);
+ const rr=o.pos.length();
+ if(rr<3.0 && o.phase===0)o.phase=1; // No stable circular orbit within ISCO.
+ if(o.integrity<=.005){o.absorbed=true;o.phase=4;burst=Math.max(burst,.45);}
+ }
+ // Pairwise contact events (limited to 15 bodies), including a compact-object flare proxy.
+ for(let ia=0;ia<objects.length;ia++)for(let ib=ia+1;ib<objects.length;ib++){
+  const a=objects[ia],b=objects[ib];if(a.absorbed||b.absorbed)continue;
+  const contact=(a.radiusM+b.radiusM)/rsMeters();
+  if(a.pos.distanceToSquared(b.pos)<contact*contact){
+   const ma=a.massKg*a.integrity,mb=b.massKg*b.integrity,tot=ma+mb;
+   if(tot<=0)continue;
+   const vel=a.vel.clone().multiplyScalar(ma).addScaledVector(b.vel,mb).divideScalar(tot);
+   if(a.kind==='ns'||b.kind==='ns'||a.kind==='wd'||b.kind==='wd')burst=Math.max(burst,2.0);
+   else burst=Math.max(burst,.4);
+   const smaller=ma<mb?a:b,larger=ma<mb?b:a;
+   feedDebris(smaller,.3,Math.min(9,Math.round(state.fragments/30)));
+   larger.vel.copy(vel);larger.massKg=tot*.88;larger.radiusM=Math.cbrt(larger.radiusM**3+smaller.radiusM**3);
+   smaller.absorbed=true;smaller.integrity=0;larger.phase=Math.max(larger.phase,3);
+   dmTick+=tot*.12;
+  }
+ }
+ for(let fi=fragments.length-1;fi>=0;fi--){
+ const f=fragments[fi],r=f.p.length();
+ if(r<=1.005 || f.t>=f.life || r>500){if(r<=1.005){dmTick+=f.massKg;burst=Math.max(burst,.07)}fragments.splice(fi,1);continue;}
+ const disk=r<13 && Math.abs(f.p.y)<.32*r;
+ if(disk){ // Approximate inelastic circularization into the disk.
+ const ang=new THREE.Vector3(-f.p.z,0,f.p.x).normalize();
+ const vCirc=circularSpeed(Math.max(3.01,r));
+ f.v.lerp(ang.multiplyScalar(vCirc),Math.min(.035,dt*.08*state.feed));
+ dmTick+=f.massKg*Math.min(.008,dt*.002*state.feed);
+ f.massKg*=1-Math.min(.008,dt*.002*state.feed);
+ }
+ integrateParticle(f.p,f.v,dt);f.t+=dt;
+ }
+ }
+ const physicalSeconds=tau*rgTime();
+ const rate=physicalSeconds>0?dmTick/physicalSeconds:0;
+ accretionRate=accretionRate*.91+rate*.09;
+ accretedMass+=dmTick;
+ diskEnergy=Math.max(0,diskEnergy*Math.exp(-seconds*.4)+Math.min(4,dmTick/ME)*.07);
+ burst=Math.max(0,burst-seconds*.23);
+}
+function drawObjects(){
+ const rad=rsMeters();
+ for(const o of objects){
+ o.mesh.visible=!o.absorbed;o.atm.visible=!o.absorbed&&checked('atmosphere')&&specs[o.kind].atm;o.jet.visible=!o.absorbed&&o.kind==='ns'&&checked('pulsar');
+ if(o.absorbed)continue;
+ const stretch=checked('stretch')?Math.min(4,Math.max(0,Math.pow(o.roche/Math.max(1.02,o.pos.length()),3)-.25)*.38):0;
+ o.mesh.position.copy(o.pos);o.atm.position.copy(o.pos);
+ o.jet.position.copy(o.pos);o.jet.rotation.set(Math.sin(simTime*.3)*.3,0,Math.cos(simTime*.33)*.3);
+ o.jet.scale.setScalar(.15+o.rDraw*.2);
+ o.mesh.material.uniforms.deformation.value=stretch;
+ o.mesh.material.uniforms.axis.value.copy(o.pos).normalize();
+ o.mesh.material.uniforms.damage.value=o.damage;
+ o.mesh.material.uniforms.heat.value=Math.min(1,o.heat+state.surfaceTemp/13000*.42);
+ o.mesh.material.uniforms.time.value=simTime;
+ o.mesh.material.uniforms.hotness.value=state.lighting+burst*.8;
+ const angular=o.vel.length();o.mesh.rotation.y+=angular*.005;
+ o.atm.scale.setScalar(o.rDraw*(1.18+stretch*.13));
+ if(o.trailN<160){o.trailN++;}
+ o.tarr.copyWithin(0,3,(o.trailN)*3);
+ const t=(o.trailN-1)*3;o.tarr[t]=o.pos.x;o.tarr[t+1]=o.pos.y;o.tarr[t+2]=o.pos.z;
+ o.line.geometry.attributes.position.needsUpdate=true;o.line.geometry.setDrawRange(0,o.trailN);
+ }
+ let shown=0;
+ for(const f of fragments){
+ if(shown>=MAX_FRAG)break;
+ dummy.position.copy(f.p);dummy.scale.setScalar(f.scale);dummy.rotation.set(f.t*.9,f.t*.6,f.t*.4);dummy.updateMatrix();
+ fragmentMesh.setMatrixAt(shown,dummy.matrix);
+ const rr=f.p.length(),temp=Math.max(0,1-rr/12);
+ fragColor.setRGB(.8+temp*.9,.35+temp*.55,.15+temp*(f.kind==='ice'?.9:.25));
+ fragmentMesh.setColorAt(shown,fragColor);shown++;
+ }
+ fragmentMesh.count=checked('debris')?shown:0;
+ fragmentMesh.instanceMatrix.needsUpdate=true;if(fragmentMesh.instanceColor)fragmentMesh.instanceColor.needsUpdate=true;
+ trailsGroup.visible=checked('trails');
+}
+function setupSelectedVelocity(kind){
+ if(!selected)return;const o=selected,r=o.pos.length(),rad=o.pos.clone().normalize(),tan=new THREE.Vector3(-rad.z,0,rad.x).normalize();
+ o.vel.copy(tan.multiplyScalar(circularSpeed(Math.max(3.02,r))));
+ if(kind==='drop')o.vel.multiplyScalar(.15);
+ if(kind==='approach')o.vel.multiplyScalar(.66);
+}
+const click=(id,fn)=>document.getElementById(id).addEventListener('click',fn);
+click('spawn',spawnOne);click('spawnMulti',()=>{for(let i=0;i<5&&objects.length<MAX_OBJS;i++)spawnOne()});
+click('resetPlanet',resetObjects);click('drop',()=>setupSelectedVelocity('drop'));
+click('stable',()=>setupSelectedVelocity('stable'));click('approach',()=>setupSelectedVelocity('approach'));
+click('follow',()=>{followEnabled=!followEnabled;document.getElementById('follow').classList.toggle('active',followEnabled)});
+click('outburst',()=>{if(selected){burst=2;selected.heat=Math.min(1,selected.heat+.3)}});
+document.getElementById('planetType').addEventListener('change',()=>{});
+document.getElementById('scientific').addEventListener('change',e=>{
+ document.getElementById('scienceStats').style.display=e.target.checked?'block':'none';
+});document.getElementById('scienceStats').style.display='none';
+resetObjects();
+
+let disk=true,stars=true,ring=true;
+function toggle(id,fn){const el=document.getElementById(id);el.addEventListener('click',()=>{const on=fn();el.classList.toggle('active',on)})}
+toggle('disk',()=>disk=!disk);toggle('stars',()=>stars=!stars);toggle('ring',()=>ring=!ring);
+document.getElementById('pause').onclick=()=>{paused=!paused;document.getElementById('pause').textContent=paused?'▶ Resume':'⏸ Pause'};
+document.getElementById('cinematic').onclick=()=>{cinematic=!cinematic;document.getElementById('cinematic').classList.toggle('active',cinematic);if(cinematic && fly)resetCamera()};
+document.getElementById('reset').onclick=()=>{resetObjects();resetCamera();simTime=0;paused=false;document.getElementById('pause').textContent='⏸ Pause';for(const [k,,,,] of defs){const orig=defs.find(x=>x[0]===k);setV(k,orig[4]);}disk=stars=ring=true;['disk','stars','ring'].forEach(id=>document.getElementById(id).classList.add('active'));document.getElementById('mode').value='balanced';};
+document.getElementById('shot').onclick=()=>{try{const a=document.createElement('a');a.href=renderer.domElement.toDataURL('image/png');a.download='gargantua-'+Date.now()+'.png';a.click()}catch(e){fail('Không thể lưu ảnh: '+e)}};
+document.getElementById('full').onclick=()=>{if(document.fullscreenElement)document.exitFullscreen();else document.documentElement.requestFullscreen().catch(fail)};
+document.getElementById('toggle').onclick=()=>document.getElementById('panel').classList.toggle('hide');
+document.getElementById('mode').addEventListener('change',e=>{const m=e.target.value;
+ if(m==='performance'){setV('quality',32);setV('resolution',.55);}
+ else if(m==='balanced'){setV('quality',72);setV('resolution',.85);}
+ else if(m==='scientific'){setV('quality',104);setV('resolution',.8);setV('lensing',1);}
+ else if(m==='cinematic'){setV('quality',112);setV('resolution',1);setV('exposure',1.42);}
+});
+const fmt=n=>Number(n).toLocaleString('en-US',{maximumFractionDigits:2});
+function updateStats(){
+ const mass=bhMass()/MS,rskm=rsMeters()/1000;
+ document.getElementById('rs').textContent=fmt(mass)+' M☉ / '+fmt(rskm)+' km';
+ document.getElementById('photon').textContent='1.5 / 3 Rs';
+ document.getElementById('status').innerHTML='Paczynski–Wiita gravity / Schwarzschild ray optics<br>Mass: '+fmt(mass)+' M☉ · Rs: '+fmt(rskm)+' km';
+}
+function updateScience(){
+ if(!selected)return;const o=selected,r=o.pos.length(),clear=r-1,rT=rocheRadius(o);
+ const ar=2*G*bhMass()*o.radiusM/Math.pow(Math.max(1,r)*rsMeters(),3);
+ const physicalVelocity=o.vel.length()*C;
+ document.getElementById('objectPhys').textContent=fmt(o.massKg/ME)+' M⊕ / '+fmt(o.radiusM/1000)+' km';
+ document.getElementById('objDensity').textContent=fmt(o.massKg/(4*Math.PI/3*o.radiusM**3))+' kg/m³';
+ document.getElementById('planetDist').textContent=fmt(r)+' Rs / '+fmt(clear*rsMeters()/1000)+' km';
+ document.getElementById('objSpeed').textContent=fmt(physicalVelocity/1000)+' km/s';
+ document.getElementById('tidalForce').textContent=ar.toExponential(2)+' m/s²';
+ document.getElementById('rocheRadius').textContent=fmt(rT)+' Rs'+(rT<1?' (inside horizon)':'');
+ document.getElementById('integrity').textContent=fmt(o.integrity*100)+'%';
+ document.getElementById('accretion').textContent=accretionRate.toExponential(2)+' kg/s';
+ document.getElementById('luminosity').textContent=fmt(Math.min(99,(diskEnergy+burst*.4)*100))+'% + basal';
+ document.getElementById('fragmentStat').textContent=objects.filter(a=>!a.absorbed).length+' / '+fragments.length;
+ const warning=o.absorbed?'EVENT HORIZON / ABSORPTION':o.integrity<.2?'ACCRETION / DEBRIS':o.integrity<.7?'STRUCTURAL FAILURE':r<rT?'ROCHE LIMIT EXCEEDED':r<rT*1.65?'TIDAL STRESS INCREASING':r<3?'BELOW ISCO / PLUNGE':'STABLE / ORBITING';
+ document.getElementById('planetStage').textContent=warning;
+}
+let count=0,acc=0,average=60,lowTime=0,autoReduced=false;
+function paint(timeDelta){
+ uniforms.uTime.value=simTime;
+ uniforms.uHorizon.value=1;
+ uniforms.uSpin.value=state.spin;uniforms.uTilt.value=state.tilt*Math.PI/180;
+ uniforms.uTemp.value=state.temp;uniforms.uDensity.value=state.density;uniforms.uBrightness.value=state.brightness*(1+Math.min(1.4,diskEnergy+burst*.8));
+ uniforms.uLensing.value=checked('relativistic')?state.lensing:0;uniforms.uSteps.value=Math.round(state.quality);
+ uniforms.uPlanetVisible.value=0; // Visible 3D objects are drawn by the geometry pass.
+ uniforms.uTurbulence.value=state.turbulence;uniforms.uVisualDetail.value=state.visualDetail;uniforms.uLighting.value=state.lighting;
+ uniforms.uDisk.value=disk?1:0;uniforms.uStars.value=stars?1:0;uniforms.uRing.value=ring?1:0;
+ renderer.setRenderTarget(mainRT);quad.material=simulation;renderer.render(quadScene,quadCam);
+ const bw=blurA.width,bh=blurA.height;
+ blurU.tSource.value=mainRT.texture;blurU.stepUV.value.set(1/bw,0);blurU.threshold.value=1.05;
+ renderer.setRenderTarget(blurA);quad.material=blurMat;renderer.render(quadScene,quadCam);
+ blurU.tSource.value=blurA.texture;blurU.stepUV.value.set(0,1/bh);blurU.threshold.value=0;
+ renderer.setRenderTarget(blurB);renderer.render(quadScene,quadCam);
+ compU.tMain.value=mainRT.texture;compU.tBloom.value=blurB.texture;compU.exposure.value=state.exposure;
+ compU.bloom.value=document.getElementById('mode').value==='scientific'?.20:document.getElementById('mode').value==='performance'?.25:document.getElementById('mode').value==='cinematic'?1.6:.84;compU.bloom.value*=state.glow;
+ renderer.setRenderTarget(null);quad.material=compMat;renderer.render(quadScene,quadCam);
+ // Depth is cleared but framebuffer color is kept; meshes overlay the ray-traced backdrop.
+ renderer.autoClear=false;renderer.clearDepth();drawObjects();renderer.render(visualScene,camera);renderer.autoClear=true;
+}
+let running=true;
+function frame(){
+ if(!running)return;requestAnimationFrame(frame);
+ const dt=Math.min(clock.getDelta(),.065);
+ if(!paused){simTime+=dt*state.speed;stepPhysics(dt);}
+ if(followEnabled&&!fly&&!cinematic&&selected&&!selected.absorbed){
+  const desired=Math.atan2(selected.pos.x,selected.pos.z);
+  yaw+=Math.atan2(Math.sin(desired-yaw),Math.cos(desired-y))*Math.min(1,dt*.5);
+  dist=Math.max(5,dist*.999);
+ }
+ if(cinematic&&!fly)yaw+=dt*.085;
+ updateCamera(dt);
+ try{paint(dt)}catch(e){running=false;fail('Lỗi kết xuất: '+(e.stack||e));return}
+ acc+=dt;count++;
+ if(acc>.75){
+  average=count/acc;document.getElementById('fps').textContent=Math.round(average)+' FPS';
+  updateStats();updateScience();
+  if(average<25)lowTime+=acc;else lowTime=Math.max(0,lowTime-acc);
+  if(lowTime>4&&!autoReduced&&document.getElementById('mode').value!=='scientific'){
+   setV('quality',Math.max(24,state.quality-16));setV('resolution',Math.max(.45,state.resolution-.15));
+   autoReduced=true;lowTime=0;
+  }
+  acc=0;count=0;
+ }
+}
+renderer.domElement.addEventListener('webglcontextlost',e=>{e.preventDefault();running=false;fail('WebGL context lost. Hãy tải lại trang, thử Performance Mode hoặc tắt các tab GPU khác.')});
+renderer.domElement.addEventListener('webglcontextrestored',()=>location.reload());
+updateStats();resetCamera();resize();
+// Check compiled shaders through WebGL debug API if driver reports errors.
+try{renderer.compile(quadScene,quadCam);}catch(e){fail('Shader compilation: '+e);}
+frame();
+})();
+</script></body></html>
