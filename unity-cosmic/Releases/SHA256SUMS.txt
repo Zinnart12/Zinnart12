@@ -1,2 +1,2 @@
-f34f93b20500870c7f90a28170c10c534ba6b9ce6169e9ac960f5e39fa218027  cosmic-unity-phase1-source.zip
-7b4429eafea5a77807a87c72b587f317f8c61d698711e636f7435fbfa81dad16  cosmic-unity66-safe-mode-fix.zip
+26185711a95f5a4d1748b799d0213ea5ead31561a37ff463fab466c94c598a10  cosmic-unity-phase1-source.zip
+148e5f9355841613df231f971832cd7f5d236de3376dfe01b79b732ff1154cbd  cosmic-unity66-safe-mode-fix.zip

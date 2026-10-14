@@ -13,7 +13,7 @@ for folder in ['Assets', 'Packages', 'ProjectSettings', 'Docs', 'Tools']:
     for path in (root / folder).rglob('*'):
         if path.is_file() and not any(part in {'bin', 'obj', '__pycache__'} for part in path.parts):
             paths.append(path)
-paths += [root / name for name in ['README.md', 'VALIDATION.md', '.gitignore', 'APPLY_REPAIR.cmd']]
+paths += [root / name for name in ['README.md', 'VALIDATION.md', '.gitignore', 'APPLY_REPAIR.cmd', 'AGENTS.md']]
 with zipfile.ZipFile(archive, 'w', zipfile.ZIP_DEFLATED, compresslevel=9) as package:
     for path in sorted(paths):
         package.write(path, 'CosmicSandboxUnity/' + path.relative_to(root).as_posix())
@@ -25,7 +25,7 @@ hotfix = release / 'cosmic-unity66-safe-mode-fix.zip'
 with zipfile.ZipFile(hotfix, 'w', zipfile.ZIP_DEFLATED, compresslevel=9) as package:
     # Preserve additional user packages: APPLY_REPAIR merges module/URP pins into
     # their manifest instead of replacing it with the repository's manifest.
-    for relative in ['APPLY_REPAIR.cmd',
+    for relative in ['AGENTS.md', 'APPLY_REPAIR.cmd',
                      'ProjectSettings/TagManager.asset',
                      'Assets/Cosmic/Editor/Cosmic.Editor.asmdef',
                      'Assets/Cosmic/Editor/MaterialRepair.cs',
