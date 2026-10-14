@@ -50,7 +50,7 @@ func run() -> void:
 	check(universe.origin_si==universe.engine.find_body("earth").position and universe.to_scene(universe.origin_si)==Vector3.ZERO,"floating origin tracks the focused body before float32 conversion")
 	universe.true_scale = true
 	universe.calculate_display_radii()
-	check(absf(universe.display_radii.earth/(earth.radius*universe.METRES_TO_SCENE)-1.0)<1e-12,"true-size rendering does not edit physical positions or radii")
+	check(absf(universe.display_radii.earth/(earth.radius*universe.metres_to_scene)-1.0)<1e-12,"true-size rendering does not edit physical positions or radii")
 	universe.ui.save_game()
 	var saved: Dictionary = universe.engine.snapshot()
 	universe.edit_mass("1e30")

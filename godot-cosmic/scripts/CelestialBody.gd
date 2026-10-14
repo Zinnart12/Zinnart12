@@ -18,6 +18,18 @@ var atmosphere: float = 1.0
 var composition: String = "Silicate rock, iron, water"
 var color: Color = Color("80b7e6")
 var seed: float = 1.0
+var strength: float = 1e8 # Representative tensile strength in Pa.
+var spin: float = 0.0 # Recorded dimensionless spin; photon renderer is Schwarzschild.
+var disk_enabled: bool = true
+var accreted_mass: float = 0.0
+var fragmentation_depth: int = 0
+var magnetic_axis: float = 30.0
+
+func is_luminous() -> bool:
+	return kind in ["star", "white_dwarf", "neutron_star", "pulsar"]
+
+func luminosity() -> float:
+	return 4.0 * PI * radius * radius * StellarLighting.SIGMA * pow(temperature, 4.0) if is_luminous() else 0.0
 
 func density() -> float:
 	return mass / (4.0 * PI * radius * radius * radius / 3.0)
@@ -33,7 +45,9 @@ func to_dict() -> Dictionary:
 		"mass": mass, "radius": radius, "position": Array(position), "velocity": Array(velocity),
 		"temperature": temperature, "rotation_period": rotation_period,
 		"axial_tilt": axial_tilt, "atmosphere": atmosphere, "composition": composition,
-		"color": color.to_html(), "seed": seed}
+		"color": color.to_html(), "seed": seed, "strength": strength, "spin": spin,
+		"disk_enabled": disk_enabled, "accreted_mass": accreted_mass,
+		"fragmentation_depth": fragmentation_depth, "magnetic_axis": magnetic_axis}
 
 static func from_dict(data: Dictionary) -> CelestialBody:
 	var b: CelestialBody = CelestialBody.new()
@@ -52,6 +66,12 @@ static func from_dict(data: Dictionary) -> CelestialBody:
 	b.composition = str(data.get("composition", "Rock"))
 	b.color = Color(str(data.get("color", "80b7e6")))
 	b.seed = float(data.get("seed", 1.0))
+	b.strength = float(data.get("strength", 1e8))
+	b.spin = float(data.get("spin", 0.0))
+	b.disk_enabled = bool(data.get("disk_enabled", true))
+	b.accreted_mass = float(data.get("accreted_mass", 0.0))
+	b.fragmentation_depth = int(data.get("fragmentation_depth", 0))
+	b.magnetic_axis = float(data.get("magnetic_axis", 30.0))
 	return b
 
 func detached_copy() -> CelestialBody:

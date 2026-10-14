@@ -33,15 +33,15 @@ func _initialize() -> void:
 	DirAccess.make_dir_recursive_absolute("res://releases")
 	collect("res://")
 	source_files.sort()
-	var source_error: Error = make_zip("res://releases/cosmic-godot-phase1-source.zip", source_files, "CosmicSandboxGodot/")
+	var source_error: Error = make_zip("res://releases/cosmic-godot-source.zip", source_files, "CosmicSandboxGodot/")
 	var windows_files: Array[String] = ["res://builds/windows/CosmicSandbox.exe", "res://README.md", "res://VALIDATION.md", "res://GODOT_LICENSE.txt", "res://GODOT_THIRD_PARTY.txt"]
-	var windows_error: Error = make_zip("res://releases/cosmic-godot-phase1-windows.zip", windows_files)
+	var windows_error: Error = make_zip("res://releases/cosmic-godot-windows.zip", windows_files)
 	if source_error != OK or windows_error != OK:
 		push_error("Packaging failed: " + error_string(source_error) + "; " + error_string(windows_error))
 		quit(1)
 		return
 	var checksums: FileAccess = FileAccess.open("res://releases/SHA256SUMS.txt", FileAccess.WRITE)
-	for filename: String in ["cosmic-godot-phase1-source.zip", "cosmic-godot-phase1-windows.zip"]:
+	for filename: String in ["cosmic-godot-source.zip", "cosmic-godot-windows.zip"]:
 		checksums.store_line(FileAccess.get_sha256("res://releases/"+filename)+"  "+filename)
 	checksums.close()
 	print("Packaged ",source_files.size()," source files and the Windows executable using native Godot ZIPPacker.")

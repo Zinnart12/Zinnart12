@@ -1,2 +1,2 @@
-ccab4f530a77b95283015624d591ca2f0421559c77c7626ed382122f8ded9e50  cosmic-godot-phase1-source.zip
-2318d6cf95dd439c3672308b636ce737ae8f2176d15dbe244b17e9dde9ba0083  cosmic-godot-phase1-windows.zip
+c9b5bba8c6ea98c44d82323a9ed6e5ea4b91abfd247cf7b406290e3a2a33bb96  cosmic-godot-source.zip
+6aac68349e1511353dcc5d704f8b551eb5d10be1970440ffe949cfd8ea1a8113  cosmic-godot-windows.zip

@@ -14,6 +14,8 @@ func resolve(bodies: Array[CelestialBody], previous: Array = []) -> Array[Dictio
 			for j: int in range(i + 1, bodies.size()):
 				var a: CelestialBody = bodies[i]
 				var b: CelestialBody = bodies[j]
+				# Horizon capture belongs to BlackHoleSystem, not solid-sphere contact.
+				if a.kind == "black_hole" or b.kind == "black_hole": continue
 				var contact: float = a.radius + b.radius
 				var d2: float = 0.0
 				for k: int in range(3):

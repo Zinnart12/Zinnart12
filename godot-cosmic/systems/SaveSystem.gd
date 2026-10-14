@@ -28,12 +28,12 @@ static func validate(data: Variant) -> String:
 		ids[item.id] = true
 		if not item.get("name") is String or item.name.is_empty() or item.name.length() > 100:
 			return "Invalid object name."
-		if not item.get("kind") in ["star", "planet", "moon", "asteroid", "comet"] or not item.get("surface") in ["earth", "rocky", "gas", "ice", "lava", "ocean"]:
+		if not item.get("kind") in ["star", "planet", "moon", "asteroid", "comet", "black_hole", "neutron_star", "pulsar", "white_dwarf", "debris"] or not item.get("surface") in ["earth", "rocky", "gas", "ice", "lava", "ocean"]:
 			return "Unknown object type."
 		for field: String in ["mass", "radius", "temperature", "rotation_period", "axial_tilt", "atmosphere", "seed"]:
-			if not _numeric(item.get(field), -1e35, 1e35):
+			if not _numeric(item.get(field), -1e41, 1e41):
 				return "Invalid numeric property: " + field
-		if not _numeric(item.mass, 1e-6, 1e35) or not _numeric(item.radius, 1e-3, 1e18) or not _numeric(item.temperature, 0.0, 1e9):
+		if not _numeric(item.mass, 1e-6, 1e41) or not _numeric(item.radius, 1e-3, 1e18) or not _numeric(item.temperature, 0.0, 1e9):
 			return "Invalid mass, radius or temperature."
 		if not _numeric(item.atmosphere, 0.0, 1000.0):
 			return "Invalid atmosphere."
@@ -47,6 +47,11 @@ static func validate(data: Variant) -> String:
 			return "Invalid composition."
 		if not item.get("color") is String or not Color.html_is_valid(item.color):
 			return "Invalid color."
+		for entry: Array in [["strength",0.0,1e35],["spin",-0.998,0.998],["accreted_mass",0.0,1e41],["fragmentation_depth",0.0,10.0],["magnetic_axis",0.0,180.0]]:
+			if item.has(entry[0]) and not _numeric(item[entry[0]],entry[1],entry[2]): return "Invalid " + entry[0]
+		if item.has("fragmentation_depth") and float(item.fragmentation_depth) != floorf(float(item.fragmentation_depth)): return "Invalid fragment generation."
+		if item.has("disk_enabled") and not item.disk_enabled is bool: return "Invalid disk flag."
+		if item.kind == "black_hole" and absf(item.radius/BlackHoleSystem.schwarzschild_radius(item.mass)-1.0) > 1e-8: return "Black hole radius must equal Schwarzschild radius."
 	return ""
 
 static func _numeric(value: Variant, minimum: float, maximum: float) -> bool:

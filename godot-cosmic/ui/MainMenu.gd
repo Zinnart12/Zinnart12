@@ -37,7 +37,7 @@ func _ready() -> void:
 	add_child(graphics)
 	box.add_child(ThemeFactory.button("GRAPHICS & DISPLAY", func() -> void: graphics.popup_centered()))
 	box.add_child(ThemeFactory.button("QUIT", func() -> void: get_tree().quit()))
-	box.add_child(ThemeFactory.label("PHASE 1  ·  SI UNITS  ·  CPU FLOAT64  ·  FORWARD+", 13, Color("678596")))
+	box.add_child(ThemeFactory.label("BLACK HOLE UPDATE  ·  SI UNITS  ·  CPU FLOAT64  ·  FORWARD+", 13, Color("678596")))
 
 func continue_saved() -> void:
 	var result: Dictionary = SaveSystem.load_snapshot()

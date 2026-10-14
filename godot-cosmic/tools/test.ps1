@@ -8,6 +8,10 @@ try {
     if ($LASTEXITCODE -ne 0) { throw "Physics tests failed" }
     & $Godot --headless --script res://tests/SceneTests.gd
     if ($LASTEXITCODE -ne 0) { throw "Scene tests failed" }
+    & $Godot --headless --script res://tests/CompactPhysicsTests.gd
+    if ($LASTEXITCODE -ne 0) { throw "Compact physics tests failed" }
+    & $Godot --headless --script res://tests/CompactSceneTests.gd
+    if ($LASTEXITCODE -ne 0) { throw "Compact scene tests failed" }
 } finally {
     Pop-Location
 }

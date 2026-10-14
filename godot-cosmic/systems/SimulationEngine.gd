@@ -9,6 +9,7 @@ var baseline_energy: float = 0.0
 var diagnostics: Dictionary = {}
 var gravity: GravitySolver = GravitySolver.new()
 var collision: CollisionSystem = CollisionSystem.new()
+var black_holes: BlackHoleSystem = BlackHoleSystem.new()
 var limited: bool = false
 var min_step: float = 0.0
 var events: Array[Dictionary] = []
@@ -37,7 +38,8 @@ func advance(seconds: float, max_steps: int = 256, budget_usec: int = 6000) -> f
 	var completed: float = 0.0
 	var count: int = 0
 	min_step = INF
-	var contacts: Array[Dictionary] = collision.resolve(bodies)
+	var contacts: Array[Dictionary] = black_holes.resolve(bodies)
+	contacts.append_array(collision.resolve(bodies))
 	if not contacts.is_empty():
 		events.append_array(contacts)
 		reset_baseline()
@@ -48,15 +50,20 @@ func advance(seconds: float, max_steps: int = 256, budget_usec: int = 6000) -> f
 		if not is_finite(dt) or dt <= 0.0 or time + dt == time:
 			break
 		var previous: Array = []
+		var previous_ids: Dictionary = {}
 		for body: CelestialBody in bodies:
 			previous.append(body.position.duplicate())
+			previous_ids[body.id] = body.position.duplicate()
+		black_holes.relativistic_kick(bodies,dt*0.5)
 		gravity.step(bodies, dt)
+		black_holes.relativistic_kick(bodies,dt*0.5)
 		completed += dt
 		time += dt
 		steps += 1
 		count += 1
 		min_step = minf(min_step, dt)
-		contacts = collision.resolve(bodies, previous)
+		contacts = black_holes.resolve(bodies,previous_ids)
+		contacts.append_array(collision.resolve(bodies,previous if contacts.is_empty() else []))
 		if not contacts.is_empty():
 			events.append_array(contacts)
 			reset_baseline()

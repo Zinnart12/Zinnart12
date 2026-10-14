@@ -1,11 +1,17 @@
 # Ảnh kiểm tra mô phỏng
 
-## Godot 4 — Native Phase 1
+## Godot 4 — Graphics & Black Hole Update
 
-`godot-menu.png`, `godot-earth.png`, `godot-sun.png` và
-`godot-earth-moon.png` là framebuffer của Godot 4.6.3, Vulkan Forward+
-trên llvmpipe. Xem `godot-cosmic/VALIDATION.md`; các ảnh này không phải
-ảnh từ bản Three.js và không xác nhận FPS trên RTX.
+Ảnh `godot-*.png` là framebuffer Godot 4.6.3 / Vulkan Forward+ thật trên
+llvmpipe. Xem `godot-cosmic/VALIDATION.md` (94 kiểm tra đạt). Ảnh có Solar
+overview, Earth và True Size Earth, Sun, Binary Stars, Earth–Moon,
+Black Hole/plasma flow/no-disk/UI và Pulsar. `godot-exported-black-hole.png` kiểm tra shader
+từ chính PCK nhúng trong Windows EXE. Không dùng ảnh browser thay
+cho bằng chứng native, không xác nhận FPS RTX từ GPU phần mềm.
+
+Bản cập nhật sửa photosphere sao đen, marker/camera/clipping, chiếu sáng SI,
+shader và thêm black-hole capture/tidal debris, ray renderer, neutron star,
+presets/UI. Đọc README native để biết giới hạn mô hình GR và hủy thiên thể.
 
 ## Cosmic Sandbox — Phase 1
 
