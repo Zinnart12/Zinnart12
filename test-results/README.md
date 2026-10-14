@@ -1,5 +1,12 @@
 # Ảnh kiểm tra mô phỏng
 
+## Godot 4 — Native Phase 1
+
+`godot-menu.png`, `godot-earth.png`, `godot-sun.png` và
+`godot-earth-moon.png` là framebuffer của Godot 4.6.3, Vulkan Forward+
+trên llvmpipe. Xem `godot-cosmic/VALIDATION.md`; các ảnh này không phải
+ảnh từ bản Three.js và không xác nhận FPS trên RTX.
+
 ## Cosmic Sandbox — Phase 1
 
 `cosmic-overview.png`, `cosmic-earth.png` và `cosmic-mobile.png` được chụp
