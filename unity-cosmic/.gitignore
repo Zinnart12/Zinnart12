@@ -1,0 +1,14 @@
+Library/
+Temp/
+Obj/
+Logs/
+UserSettings/
+Builds/
+TestResults/
+Tools/bin/
+Tools/obj/
+*.csproj
+!Tools/CoreTests.csproj
+*.sln
+*.user
+*.pidb

@@ -1,0 +1,16 @@
+Source archive extracted to /tmp/cosmic-unity-clean-source/CosmicSandboxUnity.
+No Library cache, Unity Editor binaries, license or build artifacts in the ZIP.
+Archive CRC check passed; archive contains all component metadata and source.
+
+Actual clean-directory commands and results, 2026-10-14:
+
+bash Tools/test-core.sh
+  TOTAL 29 core checks passed
+python3 Tools/typecheck-unity.py
+  PASS Cosmic.Core / Cosmic.Runtime / Cosmic.Editor / Cosmic.PlayModeTests
+python3 Tools/check-hlsl.py
+  TOTAL 16 HLSL stages/variants compiled
+python3 Tools/check-project.py
+  PASS asmdef/package/serialized component script references
+
+Unity native import/PlayMode/Windows execution remain blocked by license.

@@ -1,0 +1,6 @@
+{
+  "name": "Cosmic.Editor",
+  "rootNamespace": "Cosmic.Editor",
+  "references": ["Cosmic.Core", "Cosmic.Runtime", "Unity.RenderPipelines.Core.Runtime", "Unity.RenderPipelines.Universal.Runtime"],
+  "includePlatforms": ["Editor"]
+}

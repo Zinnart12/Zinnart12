@@ -1,0 +1,23 @@
+Executed with official DXC 1.9.2609.5 and actual URP 17.0.4 HLSL includes,
+from Unity Editor 6000.0.65f1, 2026-10-14. Command: python3 Tools/check-hlsl.py
+
+PASS DXC + actual URP includes: Atmosphere_vs
+PASS DXC + actual URP includes: Atmosphere_ps
+PASS DXC + actual URP includes: Clouds_vs
+PASS DXC + actual URP includes: Clouds_ps
+PASS DXC + actual URP includes: Planet_vs
+PASS DXC + actual URP includes: Planet_ps
+PASS DXC + actual URP includes: Rings_vs
+PASS DXC + actual URP includes: Rings_ps
+PASS DXC + actual URP includes: Star_vs
+PASS DXC + actual URP includes: Star_ps
+PASS DXC + actual URP includes: Starfield_vs
+PASS DXC + actual URP includes: Starfield_ps
+PASS DXC + actual URP includes: Starfield_instanced_vs
+PASS DXC + actual URP includes: Starfield_instanced_ps
+PASS DXC + actual URP includes: Trail_vs
+PASS DXC + actual URP includes: Trail_ps
+TOTAL 16 HLSL stages/variants compiled; GPU rendering remains a separate check.
+
+Unity native shader import, platform variant stripping and rendered pixels
+remain pending. This result does not claim GPU/PlayMode success.

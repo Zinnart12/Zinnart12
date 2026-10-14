@@ -1,0 +1,5 @@
+{
+  "name": "Cosmic.Runtime",
+  "rootNamespace": "Cosmic.Runtime",
+  "references": ["Cosmic.Core", "Unity.RenderPipelines.Core.Runtime", "Unity.RenderPipelines.Universal.Runtime", "UnityEngine.UI"]
+}

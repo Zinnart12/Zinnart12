@@ -1,0 +1,6 @@
+{
+  "name": "Cosmic.Core",
+  "rootNamespace": "Cosmic.Core",
+  "references": [],
+  "noEngineReferences": true
+}

@@ -1,0 +1,4 @@
+PASS real Unity API compile: Cosmic.Core
+PASS real Unity API compile: Cosmic.Runtime
+PASS real Unity API compile: Cosmic.Editor
+PASS real Unity API compile: Cosmic.PlayModeTests
