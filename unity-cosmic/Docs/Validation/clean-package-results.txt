@@ -18,3 +18,13 @@ validation to synchronize transparency/keyword/pass state. The five assemblies w
 recompiled against the actual 6.6 DLLs after that edit (see csharp-results.txt).
 Native import, three EditMode tests, five PlayMode tests, Windows build/run and GPU
 screenshots remain unexecuted because Unity activation exits 198 before project import.
+
+Safe Mode follow-up after user-provided Windows screenshot:
+TagManager uses the official Unity 6.6 template schema with explicit empty strings.
+Both test asmdefs remove TestRunner references already supplied by TestAssemblies.
+Three import-configuration regression checks and the complete project checks passed.
+All five C# assemblies were recompiled successfully against the real Unity 6.6 DLLs.
+The refreshed source ZIP was extracted to /tmp/cosmic-unity66-safe-mode-source;
+check-project.py passed there including the three new regression checks.
+Both release ZIPs passed CRC, source-byte equality and SHA256 verification.
+No native Windows reimport/PlayMode was performed in cloud.

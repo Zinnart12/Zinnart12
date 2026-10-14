@@ -4,8 +4,11 @@ import json
 import os
 import pathlib
 import re
+import subprocess
+import sys
 
 root = pathlib.Path(__file__).resolve().parents[1]
+subprocess.run([sys.executable, str(root / 'Tools/check-import-config.py')], check=True)
 editor = pathlib.Path(os.environ.get('COSMIC_UNITY_EDITOR_ROOT', '/workspace/.cache/cosmic-unity/unity66/Editor'))
 packages = editor / 'Data/Resources/PackageManager/BuiltInPackages'
 known = {}

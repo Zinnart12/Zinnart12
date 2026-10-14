@@ -21,5 +21,17 @@ with zipfile.ZipFile(archive) as package:
     if package.testzip() is not None:
         raise RuntimeError('Source ZIP integrity failure.')
 checksum = hashlib.sha256(archive.read_bytes()).hexdigest()
-(release / 'SHA256SUMS.txt').write_text(checksum + '  ' + archive.name + '\n')
+hotfix = release / 'cosmic-unity66-safe-mode-fix.zip'
+with zipfile.ZipFile(hotfix, 'w', zipfile.ZIP_DEFLATED, compresslevel=9) as package:
+    for relative in ['ProjectSettings/TagManager.asset',
+                     'Assets/Tests/PlayMode/Cosmic.PlayModeTests.asmdef',
+                     'Assets/Tests/EditMode/Cosmic.EditModeTests.asmdef']:
+        package.write(root / relative, relative)
+with zipfile.ZipFile(hotfix) as package:
+    if package.testzip() is not None:
+        raise RuntimeError('Safe Mode hotfix ZIP integrity failure.')
+hotfix_checksum = hashlib.sha256(hotfix.read_bytes()).hexdigest()
+(release / 'SHA256SUMS.txt').write_text(checksum + '  ' + archive.name + '\n' +
+                                      hotfix_checksum + '  ' + hotfix.name + '\n')
 print(archive.name, archive.stat().st_size, 'bytes; SHA256', checksum)
+print(hotfix.name, hotfix.stat().st_size, 'bytes; SHA256', hotfix_checksum)

@@ -15,6 +15,14 @@ pipeline/scene đã được sửa; chưa chứng nhận native Play Mode hoặc
 | Pipeline/quality/material/mesh/scene/package GUID | Không còn resource GUID thiếu; global và sáu Quality level có đúng pipeline |
 | SolarSystem hierarchy | Sun, 8 hành tinh, Moon, Saturn rings, camera và manager được nối trong source |
 | Runtime dependency scan | Không có UnityEditor import trong runtime |
+| Safe Mode import configuration regression | 3 kiểm tra hồi quy; 32 layer/rendering-layer slots, không còn explicit/implicit TestRunner trùng |
+
+Ảnh Console Windows do người dùng cung cấp sau commit `742492e` đã xác nhận
+hai lỗi source: TagManager YAML parser và TestRunner duplicate references.
+Chúng đã được sửa trong source và có kiểm tra import configuration riêng.
+Kết quả biên dịch Roslyn trước đó không kiểm tra native YAML/asmdef import;
+không được coi là bằng chứng Unity đã import thành công. Chưa có ảnh hoặc
+kết quả native Windows sau bản vá để xác nhận Safe Mode đã thoát.
 
 DXC kiểm tra cú pháp/type HLSL, không phải kết quả native FXC/DX11 hoặc pixel.
 Static GUID/serialization checks không thay thế Unity deserialization. Không

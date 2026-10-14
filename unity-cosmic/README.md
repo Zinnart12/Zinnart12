@@ -12,6 +12,10 @@ chạy game. Chưa có bản Unity EXE và chưa chuyển sang Phase 2–5. Xem
 Xem [Docs/URP_REPAIR.md](Docs/URP_REPAIR.md) cho nguyên nhân, cách sửa project
 có material/package bổ sung và những kiểm tra native còn chờ.
 
+Nếu Unity báo Safe Mode với lỗi `TagManager.asset` hoặc duplicate TestRunner,
+đóng Unity và giải nén [bản vá ba file](Releases/cosmic-unity66-safe-mode-fix.zip)
+ngay vào thư mục project. Xem hướng dẫn Safe Mode trong URP_REPAIR.md ở trên.
+
 ## Mở dự án
 
 1. Cài Unity Hub, kích hoạt license Unity hợp lệ trên máy của bạn.

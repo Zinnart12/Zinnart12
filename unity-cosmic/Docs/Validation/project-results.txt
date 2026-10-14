@@ -1,3 +1,4 @@
+PASS 3 Safe Mode regression checks; TagManager has 32 explicit layer/rendering slots; no duplicate implicit TestRunner references
 PASS asmdef dependency names: Assets/Cosmic/Core/Cosmic.Core.asmdef
 PASS asmdef dependency names: Assets/Cosmic/Editor/Cosmic.Editor.asmdef
 PASS asmdef dependency names: Assets/Cosmic/Runtime/Cosmic.Runtime.asmdef

@@ -24,6 +24,34 @@ HLSL đã chứng minh khi chưa có log của project trên máy.
 
 ## Các thay đổi
 
+### Safe Mode được xác nhận từ ảnh Console trên Windows
+
+Ảnh người dùng sau commit `742492e` xác nhận hai lỗi import trong source,
+không phải thiếu license trên máy Windows:
+
+- `TagManager.asset` báo YAML parser failure ở dòng 41. File cũ dùng mục
+  layer rỗng dạng dấu `-` đứng một mình và serialization version 3. Đã thay
+  bằng cấu trúc version 2 từ template chính thức Unity 6000.6.5f1, đủ 32
+  layer/rendering-layer slots, ghi tên rỗng rõ ràng bằng `""`.
+- Hai asmdef test vừa bật `optionalUnityReferences: ["TestAssemblies"]`
+  vừa khai báo TestRunner trực tiếp. Unity tự thêm UnityEngine.TestRunner
+  và UnityEditor.TestRunner khi bật TestAssemblies. Đã bỏ các reference
+  trực tiếp, giữ khả năng chạy test và các dependency game cần thiết.
+
+Roslyn độc lập không xây dependency graph bằng asmdef hoặc đọc TagManager;
+kiểm tra trước đã bỏ sót hai loại lỗi này. `Tools/check-import-config.py`
+hiện kiểm tra layer slots và explicit/implicit reference trùng, đồng thời
+có ba kiểm tra hồi quy tái tạo cấu hình lỗi cũ. `check-project.py` gọi nó.
+
+Để sửa project đang Safe Mode mà giữ các material/package riêng: đóng Unity,
+giải nén `Releases/cosmic-unity66-safe-mode-fix.zip` **ngay trong thư mục project**
+(nơi có Assets, Packages, ProjectSettings). Bản vá chỉ chứa ba file nêu trên.
+Nếu đã tự chỉnh layer names, lưu bản TagManager của mình trước khi thay file.
+Mở Unity lại, chờ compile; khi Console không còn lỗi compile, chọn Exit Safe
+Mode rồi Cosmic → Open Solar System. Không cần xóa toàn bộ Library.
+
+### URP và scene
+
 - Xác minh release chính thức `6000.6.5f1 (3ff58d469c8a)` và package đi kèm:
   URP/Core/ShaderGraph **17.6.0**, uGUI **2.6.0**, Test Framework **1.8.0**.
 - Asset native pipeline, renderer, global settings và volume lấy cấu trúc

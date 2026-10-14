@@ -1,6 +1,13 @@
 {
   "name": "Cosmic.PlayModeTests",
-  "references": ["Cosmic.Core", "Cosmic.Runtime", "UnityEngine.TestRunner"],
-  "optionalUnityReferences": ["TestAssemblies"],
-  "defineConstraints": ["UNITY_INCLUDE_TESTS"]
+  "references": [
+    "Cosmic.Core",
+    "Cosmic.Runtime"
+  ],
+  "optionalUnityReferences": [
+    "TestAssemblies"
+  ],
+  "defineConstraints": [
+    "UNITY_INCLUDE_TESTS"
+  ]
 }
