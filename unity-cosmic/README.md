@@ -1,4 +1,4 @@
-# COSMIC SANDBOX 3D — Unity 6 migration
+# COSMIC SANDBOX 3D — Unity 6
 
 Source **Phase 1** cho Unity **6000.0.65f1 LTS**, C#, URP **17.0.4**, uGUI,
 Windows x64. Đây là dự án native Unity, mở trực tiếp bằng Unity Hub.
@@ -22,14 +22,14 @@ chạy game. Chưa có bản Unity EXE và chưa chuyển sang Phase 2–6. Xem
    `Assets/Scenes/Sandbox.unity` để vào Solar System trực tiếp.
 
 Source có scene `.unity`, prefab `.prefab`, `.meta` GUID ổn định, asmdef,
-package manifest và Editor build scripts. Dữ liệu thiên thể và kết quả tham
-chiếu được xuất trực tiếp bằng solver Godot gốc, không dựng lại từ ảnh.
+package manifest và Editor build scripts. Dữ liệu thiên thể và bộ kết quả tham
+chiếu được đóng gói sẵn trong project, không cần công cụ chuyển đổi bên ngoài.
 
 ## Nội dung Phase 1
 
 - Solar System: Sun, Mercury, Venus, Earth, Mars, Jupiter, Saturn, Uranus,
   Neptune và Moon; Earth–Moon barycenter và toàn hệ barycentric.
-- Earth & Moon và Binary Stars dùng chính điều kiện đầu của bản Godot.
+- Earth & Moon và Binary Stars dùng điều kiện đầu SI đã được kiểm tra.
 - CPU dùng `double`/`Double3`, mét, kg, giây, m/s, K. Lực hấp dẫn từng cặp đối
   xứng, Velocity Verlet, substep thích nghi, diagnostic năng lượng/động lượng.
 - Clock tích lũy thời gian; ranh giới tích phân không theo FPS. Backlog do ngân
@@ -41,7 +41,7 @@ chiếu được xuất trực tiếp bằng solver Godot gốc, không dựng l
   render để nhìn cận cảnh. Trừ tọa độ double trước khi chuyển `Vector3` float.
 - UI menu, danh sách thiên thể, inspector vật lý, preset, Pause/Play, Step,
   Slow/Fast, True Size, Trails, Labels và ba mức chất lượng đều nối logic thật.
-- Shader HLSL chuyển từ Godot: planet procedural, đại dương/GGX, băng, đèn
+- Shader HLSL cho URP: planet procedural, đại dương/GGX, băng, đèn
   đêm, đá/hố màu procedural, dải khí/Great Red Spot, granulation sao, lớp mây,
   khí quyển mỏng và vành Saturn. ACES, HDR và bloom có giới hạn.
 - 4.096 sao nền instanced, mesh LOD và frustum culling. Trails lưu vị trí đã
@@ -67,35 +67,24 @@ exposure hiển thị được nén để giữ chi tiết; không phải phổ 
 | F11 | Fullscreen / windowed |
 | Escape | Menu / tiếp tục |
 
-## Dữ liệu và tiến độ chuyển đổi
+## Dữ liệu và tiến độ phát triển
 
-Toàn bộ **9 preset Godot** được giữ trong
-`Assets/StreamingAssets/GodotPresets.json`, gồm thông số hố đen, pulsar, sức
+Toàn bộ **9 preset** được giữ trong
+`Assets/StreamingAssets/PresetCatalog.json`, gồm thông số hố đen, pulsar, sức
 bền, spin metadata và disk flag. Phase 1 chỉ bật ba preset không compact.
 Các preset compact được lưu để tiếp tục Phase 3–5; runtime chủ động từ chối
 load chúng khi capture/tidal/renderer chưa được chuyển, tránh mô phỏng sai.
 
 `DoubleEncoding` đọc `_bits` IEEE-754 little-endian kèm giá trị JSON để giữ
-nguyên bit, kể cả signed zero. Bridge Godot kiểm tra save schema/range trước
-khi xuất; Unity kiểm tra lại trước khi áp dụng. File gốc không bị sửa.
+nguyên bit, kể cả signed zero. Snapshot được kiểm tra schema/range trước
+khi áp dụng. Bộ tham chiếu độc lập nằm trong `NBodyReferenceSteps.json`.
 
-Chuyển một save `.csu` khi có project Godot cũ:
-
-Checkout GitHub hiện tại đã có bridge trong `godot-cosmic/tools`. Nếu dùng
-ZIP Godot cũ, sao chép `Docs/GodotBridge/ExportUnityMigration.gd` từ ZIP Unity
-vào `tools/` của project Godot trước khi chạy lệnh.
-
-```powershell
-& $Godot --headless --path ../godot-cosmic --script res://tools/ExportUnityMigration.gd -- --save=C:/Saves/input.csu --out=C:/Saves/output.json
-```
-
-Trong Unity chọn **Cosmic → Import Validated Godot JSON** để lưu bản chuyển
-trong `StreamingAssets/ImportedSaves`. Đây là công cụ bảo toàn dữ liệu;
+Trong Unity chọn **Cosmic → Import Validated Snapshot JSON** để kiểm tra và
+lưu JSON schema 1 trong `StreamingAssets/ImportedSaves`. Đây là công cụ dữ liệu;
 Save/Load trong game và Add/Delete/Replace/Clone là Phase 2.
 
-[Docs/MIGRATION.md](Docs/MIGRATION.md) có bảng mapping, nguồn gốc thuật toán,
-giới hạn và cổng kiểm thử từng phase. Bản Godot vẫn còn tại `../godot-cosmic`
-và các release cũ trên GitHub để chạy/đối chiếu trong khi chuyển đổi.
+[Docs/DEVELOPMENT.md](Docs/DEVELOPMENT.md) có cấu trúc module, giới hạn và
+cổng kiểm thử từng phase. Project và ZIP source chỉ chứa nền tảng Unity.
 
 ## Kiểm thử
 

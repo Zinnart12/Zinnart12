@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace Cosmic.Core
 {
-    // Field names deliberately match Godot's to_dict(), including compact-object metadata.
+    // Field names match snapshot schema 1, including compact-object metadata.
     [Serializable]
     public sealed class LegacyBody
     {

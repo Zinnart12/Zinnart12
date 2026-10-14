@@ -14,3 +14,10 @@ python3 Tools/check-project.py
   PASS asmdef/package/serialized component script references
 
 Unity native import/PlayMode/Windows execution remain blocked by license.
+
+After removing the old engine project and renaming the fixture files:
+Source ZIP extracted to /tmp/cosmic-unity-only-source/CosmicSandboxUnity.
+29 CPU checks, four C# assembly compiles and static project checks passed.
+Preset/reference data and their metadata GUIDs are unchanged.
+The archive contains no removed-engine source, bridge or documentation.
+HLSL source did not change; the earlier 16-stage result above is retained.

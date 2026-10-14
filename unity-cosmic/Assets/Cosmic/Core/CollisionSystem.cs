@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace Cosmic.Core
 {
-    // Preserves the existing Godot inelastic baseline. Advanced fracture is Phase 3.
+    // Preserves the existing inelastic baseline. Advanced fracture is Phase 3.
     public sealed class CollisionSystem
     {
         public int Resolve(List<CelestialBody> bodies, IReadOnlyDictionary<string,Double3> previous = null)

@@ -17,8 +17,6 @@ paths += [root / name for name in ['README.md', 'VALIDATION.md', '.gitignore']]
 with zipfile.ZipFile(archive, 'w', zipfile.ZIP_DEFLATED, compresslevel=9) as package:
     for path in sorted(paths):
         package.write(path, 'CosmicSandboxUnity/' + path.relative_to(root).as_posix())
-    bridge = root.parent / 'godot-cosmic/tools/ExportUnityMigration.gd'
-    package.write(bridge, 'CosmicSandboxUnity/Docs/GodotBridge/ExportUnityMigration.gd')
 with zipfile.ZipFile(archive) as package:
     if package.testzip() is not None:
         raise RuntimeError('Source ZIP integrity failure.')

@@ -1,6 +1,3 @@
-Executed with .NET 8.0.426 / Roslyn on Linux, 2026-10-14.
-Command: bash Tools/test-core.sh
-
 PASS SI constants and Earth gravity
 PASS Schwarzschild radius is physical, not visual
 PASS Pair force preserves action/reaction
@@ -19,18 +16,16 @@ PASS Equal simulated intervals agree across frame partitions
 PASS Accumulator produces identical trajectories at 30 and 60 FPS
 PASS Budget backlog is retained and pause cancels pending time
 PASS Invalid load does not mutate the live universe
-PASS All nine Godot presets retained, including compact metadata
-PASS Godot JSON migration retains every original double bit
-PASS Original Godot Newton oracle: solar
-PASS Original Godot Newton oracle: earthmoon
-PASS Original Godot Newton oracle: binary
-PASS Original Godot Newton oracle: observatory
-PASS Original Godot Newton oracle: earthhole
-PASS Original Godot Newton oracle: solarhole
-PASS Original Godot Newton oracle: neutronhole
-PASS Original Godot Newton oracle: binaryhole
-PASS Original Godot Newton oracle: disk
+PASS All nine presets retained, including compact metadata
+PASS Snapshot adapter retains every reference double bit
+PASS Independent Newton reference: solar
+PASS Independent Newton reference: earthmoon
+PASS Independent Newton reference: binary
+PASS Independent Newton reference: observatory
+PASS Independent Newton reference: earthhole
+PASS Independent Newton reference: solarhole
+PASS Independent Newton reference: neutronhole
+PASS Independent Newton reference: binaryhole
+PASS Independent Newton reference: disk
 PASS Solar System evolves all bodies with real mutual gravity
 TOTAL 29 core checks passed
-
-These are CPU checks. No Unity PlayMode or Windows execution is included.

@@ -120,15 +120,15 @@ public static class CoreChecks
             try { engine.Load(bad);throw new Exception("Accepted NaN"); } catch(ArgumentException) { }
             Require(engine.Bodies.Count==2 && engine.Bodies[0].Mass==Astronomy.SolarMass,"Partial mutation");
         });
-        var catalog=JsonSerializer.Deserialize<PresetCatalog>(File.ReadAllText(Path.Combine(root,"Assets/StreamingAssets/GodotPresets.json")),json);
-        Check("All nine Godot presets retained, including compact metadata",()=> {
+        var catalog=JsonSerializer.Deserialize<PresetCatalog>(File.ReadAllText(Path.Combine(root,"Assets/StreamingAssets/PresetCatalog.json")),json);
+        Check("All nine presets retained, including compact metadata",()=> {
             Require(catalog.migration_schema==1 && catalog.entries.Length==9,"Missing presets");
             foreach(var e in catalog.entries)e.snapshot.ValidatedBodies();
             Require(catalog.entries.Single(e=>e.id=="solar").snapshot.bodies.Length==10,"Missing planet/Moon");
             Require(catalog.entries.Single(e=>e.id=="neutronhole").snapshot.bodies.Any(b=>b.kind=="pulsar" && Relative(b.mass,1.4*Astronomy.SolarMass)<1e-15 && b.radius==12000),"Lost neutron data");
         });
-        using var golden=JsonDocument.Parse(File.ReadAllText(Path.Combine(root,"Assets/StreamingAssets/GodotGoldenSteps.json")));
-        Check("Godot JSON migration retains every original double bit",()=> {
+        using var golden=JsonDocument.Parse(File.ReadAllText(Path.Combine(root,"Assets/StreamingAssets/NBodyReferenceSteps.json")));
+        Check("Snapshot adapter retains every reference double bit",()=> {
             var names=new Dictionary<string,string>{{"mass","Mass"},{"radius","Radius"},{"temperature","Temperature"},{"rotation_period","RotationPeriod"},
                 {"axial_tilt","AxialTilt"},{"atmosphere","Atmosphere"},{"seed","Seed"},{"strength","Strength"},{"spin","Spin"},{"accreted_mass","AccretedMass"},
                 {"magnetic_axis","MagneticAxis"},{"position","Position"},{"velocity","Velocity"}};
@@ -150,7 +150,7 @@ public static class CoreChecks
         foreach(var c in golden.RootElement.GetProperty("cases").EnumerateArray())
         {
             string id=c.GetProperty("id").GetString();
-            Check("Original Godot Newton oracle: "+id,()=> {
+            Check("Independent Newton reference: "+id,()=> {
                 var bodies=catalog.entries.Single(e=>e.id==id).snapshot.ValidatedBodies();
                 new NBodyGravitySolver().Step(bodies,c.GetProperty("dt").GetDouble());
                 var expected=JsonSerializer.Deserialize<LegacyBody[]>(c.GetProperty("bodies").GetRawText(),json);

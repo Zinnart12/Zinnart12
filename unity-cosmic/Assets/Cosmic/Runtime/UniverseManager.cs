@@ -33,7 +33,7 @@ namespace Cosmic.Runtime
             controls=cameraControls;
             try
             {
-                Catalog=JsonUtility.FromJson<PresetCatalog>(File.ReadAllText(Path.Combine(Application.streamingAssetsPath,"GodotPresets.json")));
+                Catalog=JsonUtility.FromJson<PresetCatalog>(File.ReadAllText(Path.Combine(Application.streamingAssetsPath,"PresetCatalog.json")));
                 if(Catalog==null || Catalog.migration_schema!=1 || Catalog.entries==null) throw new ArgumentException("Invalid migration catalog.");
                 foreach(var e in Catalog.entries) e.snapshot.ValidatedBodies();
                 ConfigureRendering(); LoadPreset(preset);

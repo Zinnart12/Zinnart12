@@ -12,18 +12,22 @@ chưa được kích hoạt license.
 | Ngân sách substep và backlog | Chỉ cộng thời gian thực tính, backlog tính tiếp; pause xóa backlog |
 | Xóa Sun trong core | Vận tốc giữ nguyên, thiên thể chuyển động thẳng khi không còn nguồn lực |
 | Thay nguồn bằng compact cùng mass, trong direct Newton solver | Gia tốc xa không đổi |
-| Dữ liệu Godot | Đủ 9 preset; toàn bộ double của thiên thể giữ đúng bit qua bridge/adapter |
-| Đối chiếu một bước với solver Godot thật | 9 oracle pass; sai số relative position/velocity < `1e-14` |
+| Dữ liệu preset | Đủ 9 preset; toàn bộ double của thiên thể giữ đúng bit qua snapshot adapter |
+| Đối chiếu một bước với bộ tham chiếu độc lập | 9 oracle pass; sai số relative position/velocity < `1e-14` |
 | C# API bằng DLL Editor 6000.0.65f1 + template URP thật | Core, Runtime, Editor và PlayModeTests compile, warnings-as-errors |
 | HLSL bằng DXC `1.9.2609.5` + includes URP 17.0.4 thật | 16 vertex/fragment stage/variant pass, gồm starfield instancing |
 | Manifest/asmdef/serialized script GUID | Khớp package bundled và component script references |
-| Export bridge chạy trong Godot 4.6.3 | Thành công; Godot game/solver cũ không bị sửa |
 | Source ZIP giải nén thư mục sạch, không có Unity Library | Chạy lại 29 CPU, 4 C# assembly, 16 HLSL stage/variant và static project checks: pass |
 
 Biên dịch độc lập xác nhận C# type/API và HLSL, **không** thay thế import,
 Unity shader variants, serialization scene, native JSON parser hoặc pixels.
 File kết quả thực tế trong `Docs/Validation`; không cộng test chưa chạy vào
-29 bài CPU hoặc dùng test Godot cũ để báo Unity pass.
+29 bài CPU hoặc dùng kết quả của engine khác để báo Unity pass.
+
+Phần engine cũ, công cụ export và các gói của engine cũ đã được gỡ. Preset và
+bộ tham chiếu vẫn giữ nguyên từng byte; CPU và API compile được chạy lại sau
+khi đổi đường dẫn dữ liệu và menu import. Shader không đổi so với lần kiểm
+tra HLSL ở bảng trên. Tình trạng license/PlayMode/Windows vẫn như bên dưới.
 
 ## Lần chạy Unity Editor thực tế
 

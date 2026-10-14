@@ -1,2 +1,0 @@
-c9b5bba8c6ea98c44d82323a9ed6e5ea4b91abfd247cf7b406290e3a2a33bb96  cosmic-godot-source.zip
-6aac68349e1511353dcc5d704f8b551eb5d10be1970440ffe949cfd8ea1a8113  cosmic-godot-windows.zip
