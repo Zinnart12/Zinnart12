@@ -13,7 +13,7 @@ for folder in ['Assets', 'Packages', 'ProjectSettings', 'Docs', 'Tools']:
     for path in (root / folder).rglob('*'):
         if path.is_file() and not any(part in {'bin', 'obj', '__pycache__'} for part in path.parts):
             paths.append(path)
-paths += [root / name for name in ['README.md', 'VALIDATION.md', '.gitignore']]
+paths += [root / name for name in ['README.md', 'VALIDATION.md', '.gitignore', 'APPLY_REPAIR.cmd']]
 with zipfile.ZipFile(archive, 'w', zipfile.ZIP_DEFLATED, compresslevel=9) as package:
     for path in sorted(paths):
         package.write(path, 'CosmicSandboxUnity/' + path.relative_to(root).as_posix())
@@ -23,9 +23,25 @@ with zipfile.ZipFile(archive) as package:
 checksum = hashlib.sha256(archive.read_bytes()).hexdigest()
 hotfix = release / 'cosmic-unity66-safe-mode-fix.zip'
 with zipfile.ZipFile(hotfix, 'w', zipfile.ZIP_DEFLATED, compresslevel=9) as package:
-    for relative in ['ProjectSettings/TagManager.asset',
+    # Preserve additional user packages: APPLY_REPAIR merges module/URP pins into
+    # their manifest instead of replacing it with the repository's manifest.
+    for relative in ['APPLY_REPAIR.cmd',
+                     'ProjectSettings/TagManager.asset',
+                     'Assets/Cosmic/Editor/Cosmic.Editor.asmdef',
+                     'Assets/Cosmic/Editor/MaterialRepair.cs',
+                     'Assets/Cosmic/Editor/ProjectBuilder.cs',
+                     'Assets/Cosmic/Editor/WindowsBuild.cs',
+                     'Assets/Cosmic/Runtime/CosmicBootstrap.cs',
+                     'Assets/Cosmic/Runtime/SpaceCameraController.cs',
+                     'Assets/Cosmic/Settings/PC_RPAsset.asset',
                      'Assets/Tests/PlayMode/Cosmic.PlayModeTests.asmdef',
-                     'Assets/Tests/EditMode/Cosmic.EditModeTests.asmdef']:
+                     'Assets/Tests/PlayMode/PhaseOneSceneTests.cs',
+                     'Assets/Tests/EditMode/Cosmic.EditModeTests.asmdef',
+                     'Tools/repair-urp.ps1',
+                     'Tools/build-windows.ps1',
+                     'Tools/test-unity.ps1',
+                     'Tools/verify-windows-build.py',
+                     'Docs/WINDOWS_BUILD.md']:
         package.write(root / relative, relative)
 with zipfile.ZipFile(hotfix) as package:
     if package.testzip() is not None:

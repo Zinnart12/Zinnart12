@@ -41,11 +41,13 @@ không phải thiếu license trên máy Windows:
 Roslyn độc lập không xây dependency graph bằng asmdef hoặc đọc TagManager;
 kiểm tra trước đã bỏ sót hai loại lỗi này. `Tools/check-import-config.py`
 hiện kiểm tra layer slots và explicit/implicit reference trùng, đồng thời
-có ba kiểm tra hồi quy tái tạo cấu hình lỗi cũ. `check-project.py` gọi nó.
+có năm kiểm tra hồi quy tái tạo cấu hình lỗi cũ. `check-project.py` gọi nó.
 
 Để sửa project đang Safe Mode mà giữ các material/package riêng: đóng Unity,
 giải nén `Releases/cosmic-unity66-safe-mode-fix.zip` **ngay trong thư mục project**
-(nơi có Assets, Packages, ProjectSettings). Bản vá chỉ chứa ba file nêu trên.
+(nơi có Assets, Packages, ProjectSettings). Bản vá hiện bao gồm cả sửa module/compiler/build. Sau khi giải nén, chạy
+`APPLY_REPAIR.cmd` để merge đúng version và module vào manifest đang có,
+giữ các package bổ sung. Patch không ghi đè Packages/manifest.json của bạn.
 Nếu đã tự chỉnh layer names, lưu bản TagManager của mình trước khi thay file.
 Mở Unity lại, chờ compile; khi Console không còn lỗi compile, chọn Exit Safe
 Mode rồi Cosmic → Open Solar System. Không cần xóa toàn bộ Library.
@@ -87,7 +89,7 @@ Mode rồi Cosmic → Open Solar System. Không cần xóa toàn bộ Library.
 ./Tools/repair-urp.ps1 -ClearShaderCache
 ```
 
-Script lưu backup manifest/lock, sửa đúng năm package liên quan và giữ
+Script lưu backup manifest/lock, sửa các package liên quan và bật module screencapture và giữ
 khai báo package khác. Chỉ xóa cache khi chọn switch; không xóa `Assets`
 hoặc source/DLL của bạn. DLL/URP code trùng trong `Assets` cần được xác định
 và xử lý riêng; sửa lỗi đỏ đầu tiên trong Console trước khi lỗi GUI thứ cấp.
@@ -105,3 +107,11 @@ và xử lý riêng; sửa lỗi đỏ đầu tiên trong Console trước khi l
 Cloud đã có đúng Editor 6.6 nhưng activation thiếu entitlement, exit 198.
 Vì vậy native import, việc tạo inspector, scene/mesh deserialization và
 framebuffer vẫn chưa được chạy; compiler/HLSL/GUID checks không thay thế chúng.
+
+## CS0103 ScreenCapture và UAC0005 từ ảnh Console mới
+
+Thêm com.unity.modules.screencapture 1.0.0 để Unity có ScreenCapture API;
+imageconversion là module khác và không đủ. MaterialRepair tìm Lit inspector
+bằng TypeCache, giữ GUI URP chính thức và không gọi AppDomain.GetAssemblies.
+Compiler check nay dùng manifest/asmdef thật cùng Unity analyzers, có hai
+kiểm tra âm tái hiện hai lỗi. Xem FULL_REPAIR_REPORT.md cho toàn bộ audit.

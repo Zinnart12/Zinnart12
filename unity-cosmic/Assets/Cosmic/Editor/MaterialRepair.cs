@@ -25,8 +25,10 @@ namespace Cosmic.Editor
         }
         public static Type VerifyLitInspector()
         {
-            var type=Type.GetType("UnityEditor.Rendering.Universal.ShaderGUI.LitShader, Unity.RenderPipelines.Universal.Editor",false)
-                ??AppDomain.CurrentDomain.GetAssemblies().Select(a=>a.GetType("UnityEditor.Rendering.Universal.ShaderGUI.LitShader",false)).FirstOrDefault(t=>t!=null);
+            // TypeCache uses Unity's registered type table without loading or scanning assemblies.
+            // LitShader is internal in URP 17.6, so locate its ShaderGUI subtype by full name.
+            var type=TypeCache.GetTypesDerivedFrom<ShaderGUI>("Unity.RenderPipelines.Universal.Editor")
+                .FirstOrDefault(t=>t.FullName=="UnityEditor.Rendering.Universal.ShaderGUI.LitShader");
             if(type==null || type.IsAbstract || !typeof(ShaderGUI).IsAssignableFrom(type))
                 throw new InvalidOperationException("URP LitShader inspector is unavailable. Fix the first C# package error; match URP/Core/ShaderGraph 17.6.0 and remove duplicate URP source/DLLs from Assets. Tools/repair-urp.ps1 re-resolves packages with Unity closed.");
             return type;

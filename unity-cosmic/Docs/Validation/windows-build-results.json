@@ -1,0 +1,15 @@
+{
+  "unity": "6000.6.5f1",
+  "target": "Win64 / Mono / Direct3D11",
+  "method": "Cosmic.Editor.WindowsBuild.Build",
+  "editor_exit_code": 198,
+  "windows_mono_module_installed": true,
+  "exe_present": false,
+  "license_diagnostics": [
+    "[Licensing::Module] Error: Access token is unavailable; failed to update",
+    "[Licensing::Client] Error: Code 404 while processing request (status: Found 0 entitlement groups and 0 free entitlements matching requested entitlement ids)",
+    "[Licensing::Client] Error: Code 404 while processing request (status: Found 0 entitlement groups and 0 free entitlements matching requested entitlement ids)",
+    "[Licensing::Module] Error: 'com.unity.editor.headless' was not found.",
+    "[ExitDontLaunchBugReporter] Exiting without the bug reporter. Application will exit with return code 198"
+  ]
+}

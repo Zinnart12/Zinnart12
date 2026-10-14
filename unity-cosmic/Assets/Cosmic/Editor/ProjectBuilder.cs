@@ -59,6 +59,7 @@ namespace Cosmic.Editor
             var asset=AssetDatabase.LoadAssetAtPath<UniversalRenderPipelineAsset>(PipelinePath);
             if(asset==null)throw new InvalidOperationException("Missing serialized URP asset: "+PipelinePath);
             asset.supportsHDR=true;asset.supportsCameraDepthTexture=true;asset.supportsCameraOpaqueTexture=true;
+            asset.gpuResidentDrawerMode=GPUResidentDrawerMode.Disabled;
             GraphicsSettings.defaultRenderPipeline=asset;
             int selected=QualitySettings.GetQualityLevel();
             for(int i=0;i<QualitySettings.names.Length;i++) {QualitySettings.SetQualityLevel(i,false);QualitySettings.renderPipeline=asset;}

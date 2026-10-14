@@ -59,11 +59,13 @@ scattering và mây vẫn là lớp mesh xấp xỉ. Compact runtime chưa bật
 
 | Phase | Cổng kiểm thử | Hiện tại |
 | --- | --- | --- |
-| 1 — Foundation | CPU/reference/energy/FPS/double; Unity import + 3 EditMode + 5 PlayMode tests | Independent checks pass; native runtime thiếu license |
-| 2 — Physics/Interaction | Jobs/Burst double3, attracting/non-attracting, Add/Delete/Replace | Chờ cổng runtime Phase 1 |
-| 3 — Graphics/Library | Planet/Star/BlackHole HLSL, neutron/pulsar, thư viện | Surface HLSL nền đã có; phần nâng cao còn chờ |
-| 4 — Destruction | Tidal stages, collision/heat/debris, intact SMBH capture | Chưa bắt đầu |
-| 5 — Sandbox/Release | Inspector chỉnh sửa, Save/Load, 16 scenarios, Windows build/run | Chưa bắt đầu |
+| 1 — URP/Import repair | C# dependency/analyzer/module, YAML/asmdef, material/shader import | Independent checks pass; native import chờ license |
+| 2 — Solar/camera | Sun/8 planets/Moon/rings, camera, starfield và 6 PlayMode tests | Source đã có; native scene/pixel chưa chạy |
+| 3 — Library | Moons, dwarf planets, additional planet types, compact stars, clusters/nebulae/galaxies | Chờ cổng chạy scene; hiện Solar 10 bodies và 3 preset được bật |
+| 4 — Sandbox physics | Jobs/Burst, Add/Delete/Replace/Clone, editable inspector, SI trajectory tests | Newton/Verlet double nền đã có; interactive expansion còn chờ |
+| 5 — Compact/destruction | Ray lensing, tidal stages, fracture/heat/debris và intact SMBH capture | Chưa bắt đầu runtime |
+| 6 — Graphics/performance | Corona/flares, nebula, advanced scattering và hardware optimization | Procedural shader/LOD/instancing nền đã có; phần nâng cao chờ |
+| 7 — Windows release | Save/load acceptance, real EXE/export/run và fullscreen/resolution | Exporter và module đã có; actual export thoát 198 vì license |
 | Performance validation | RTX 3050 Ti / i7-11800H / 1080p benchmark | Chưa đo |
 
 Test Sun Removed và thay nguồn cùng mass hiện chứng minh core Newton,

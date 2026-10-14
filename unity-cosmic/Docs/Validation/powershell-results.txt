@@ -1,0 +1,17 @@
+PASS PowerShell script parser: test-unity.ps1
+PASS PowerShell script parser: build-windows.ps1
+PASS PowerShell script parser: repair-urp.ps1
+PASS PowerShell script parser: check-powershell.ps1
+PASS EditMode fixture (not native execution) native NUnit report: 3 required named tests executed and passed.
+PASS PlayMode fixture (not native execution) native NUnit report: 6 required named tests executed and passed.
+PASS report-parser rejection fixture: zero tests
+PASS report-parser rejection fixture: skipped required tests
+PASS report-parser rejection fixture: inconclusive tests
+PASS report-parser rejection fixture: failed tests
+PASS report-parser rejection fixture: missing required test despite correct total
+PASS report-parser rejection fixture: duplicate expected test
+PASS report-parser rejection fixture: malformed XML
+PASS report-parser rejection fixture: missing report
+PASS report-parser rejection fixture: stale XML plus exit-zero command
+PASS PlayMode invocation keeps rendering and WaitForEndOfFrame enabled.
+NOTE: fixture checks are not native Unity import, test execution, or a Windows build.

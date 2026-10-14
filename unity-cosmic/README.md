@@ -6,15 +6,16 @@ Windows x64. Đây là dự án native Unity, mở trực tiếp bằng Unity Hu
 **Trạng thái:** source Phase 1 sửa URP/scene đã được kiểm tra độc lập bằng
 DLL Unity 6.6, DXC và kiểm tra GUID. Project có đầy đủ scene/material/mesh
 trong source; không cần gán shader thủ công cho từng hành tinh. Play Mode còn chờ license Unity; Phase 1 chưa vượt cổng kiểm thử
-chạy game. Chưa có bản Unity EXE và chưa chuyển sang Phase 2–5. Xem
+chạy game. Chưa có bản Unity EXE và chưa chứng nhận các phase tiếp theo. Xem
 [VALIDATION.md](VALIDATION.md) để phân biệt kết quả đã chạy và kiểm tra còn chờ.
 
 Xem [Docs/URP_REPAIR.md](Docs/URP_REPAIR.md) cho nguyên nhân, cách sửa project
 có material/package bổ sung và những kiểm tra native còn chờ.
 
 Nếu Unity báo Safe Mode với lỗi `TagManager.asset` hoặc duplicate TestRunner,
-đóng Unity và giải nén [bản vá ba file](Releases/cosmic-unity66-safe-mode-fix.zip)
-ngay vào thư mục project. Xem hướng dẫn Safe Mode trong URP_REPAIR.md ở trên.
+đóng Unity và giải nén [bản vá import/compiler/build](Releases/cosmic-unity66-safe-mode-fix.zip)
+ngay vào thư mục project, rồi chạy `APPLY_REPAIR.cmd`. Script sửa manifest
+và giữ các package bổ sung. Xem hướng dẫn trong URP_REPAIR.md ở trên.
 
 ## Mở dự án
 
@@ -113,21 +114,26 @@ Với Editor có license trên Windows:
 ```
 
 Hoặc Window → General → Test Runner → EditMode/PlayMode → Run All. Có ba
-test Editor (Quality, Lit inspector/material conversion, solar hierarchy) và năm test scene,
+test Editor (Quality, Lit inspector/material conversion, solar hierarchy) và sáu test scene,
 focus/SI, JSON double, preset và pixel thật của Sun/Earth/Jupiter. Bài pixel
-cần GPU/cửa sổ hiển thị, không dùng `-nographics`. Kết quả/ảnh vào
+cần GPU/Game View hiển thị, không dùng `-nographics` hoặc `-batchmode`
+cho PlayMode vì screenshot test chờ cuối frame. Kết quả/ảnh vào
 `TestResults`, không ghi đè save người chơi.
 
 ## Build Windows x64
 
-Sau khi PlayMode pass, chọn **Cosmic → Build Windows x64** hoặc:
+Sau khi PlayMode pass, chọn **Cosmic → Build Windows x64** hoặc (đóng Editor trước khi chạy):
 
 ```powershell
-./Tools/build-windows.ps1 -Unity 'C:/Program Files/Unity/Hub/Editor/6000.6.5f1/Editor/Unity.exe'
+./Tools/build-windows.ps1 -Unity 'C:/Program Files/Unity/Hub/Editor/6000.6.5f1/Editor/Unity.exe' -SmokeTest
 ```
 
-Output: `Builds/Windows/CosmicSandbox.exe`. Phân phối **toàn bộ thư mục**
-Windows gồm EXE, UnityPlayer.dll và dữ liệu đi kèm. Build script kiểm tra
+Output: `CosmicSandboxBuild/CosmicSandbox.exe`. Phân phối **toàn bộ thư mục**
+CosmicSandboxBuild gồm EXE, UnityPlayer.dll, Mono và dữ liệu đi kèm.
+Build thành công mới tạo `Releases/CosmicSandboxBuild.zip`; máy cloud chưa
+có player vì lượt export thực tế thoát 198 do license. Xem
+[Docs/WINDOWS_BUILD.md](Docs/WINDOWS_BUILD.md) và
+[Docs/FULL_REPAIR_REPORT.md](Docs/FULL_REPAIR_REPORT.md). Build script kiểm tra
 Windows support module và `BuildReport`; không báo thành công khi build lỗi.
 
 Chưa benchmark trên i7-11800H / RTX 3050 Ti / RAM 16 GB hoặc chạy Windows 11.

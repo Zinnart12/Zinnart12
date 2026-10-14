@@ -15,6 +15,7 @@ namespace Cosmic.Tests
         [UnityTest]
         public IEnumerator SolarSystemHasRealBodiesAndCompiledSurfaceShaders()
         {
+            LogAssert.Expect(LogType.Log,"CosmicSandbox startup ready: solar");
             yield return SceneManager.LoadSceneAsync("SolarSystem");yield return null;
             var u=Object.FindAnyObjectByType<UniverseManager>();Assert.NotNull(u);Assert.IsNull(u.LastError);
             u.Paused=true;Assert.AreEqual(10,u.Simulation.Bodies.Count);
@@ -28,6 +29,7 @@ namespace Cosmic.Tests
         [UnityTest]
         public IEnumerator CameraFocusDoesNotChangeSIStateAndStepsMovePlanets()
         {
+            LogAssert.Expect(LogType.Log,"CosmicSandbox startup ready: solar");
             yield return SceneManager.LoadSceneAsync("SolarSystem");yield return null;
             var u=Object.FindAnyObjectByType<UniverseManager>();u.Paused=true;
             var c=Object.FindAnyObjectByType<SpaceCameraController>();u.Select("earth");
@@ -41,8 +43,39 @@ namespace Cosmic.Tests
             LogAssert.NoUnexpectedReceived();
         }
         [UnityTest]
+        public IEnumerator CameraKeepsEarthResolvableWhenZoomingToOuterSystemDistances()
+        {
+            LogAssert.Expect(LogType.Log,"CosmicSandbox startup ready: solar");
+            yield return SceneManager.LoadSceneAsync("SolarSystem");yield return null;
+            var u=Object.FindAnyObjectByType<UniverseManager>();u.Paused=true;u.TrueSize=true;u.Select("earth");
+            var c=Object.FindAnyObjectByType<SpaceCameraController>();
+            var position=u.Selected.Position;var velocity=u.Selected.Velocity;
+            c.FocusSelected();yield return null;
+            var view=Object.FindObjectsByType<CelestialBodyView>().Single(x=>x.name=="Earth");
+            float nearRadius=view.transform.localScale.x;
+            c.SetObservationDistance(25*Astronomy.AU,true);yield return null;
+            Assert.AreEqual(position.X,u.Selected.Position.X);Assert.AreEqual(position.Y,u.Selected.Position.Y);Assert.AreEqual(position.Z,u.Selected.Position.Z);
+            Assert.AreEqual(velocity.X,u.Selected.Velocity.X);Assert.AreEqual(velocity.Y,u.Selected.Velocity.Y);Assert.AreEqual(velocity.Z,u.Selected.Velocity.Z);
+            var camera=Camera.main;var screen=camera.WorldToViewportPoint(view.transform.position);
+            Assert.Greater(screen.z,0);Assert.That(screen.x,Is.InRange(.49f,.51f));Assert.That(screen.y,Is.InRange(.49f,.51f));
+            Assert.Less(view.transform.localScale.x,nearRadius);
+            var p=camera.transform.position;
+            float spacing=Mathf.Max(FloatSpacing(p.x),FloatSpacing(p.y),FloatSpacing(p.z));
+            // A render-coordinate step must remain smaller than 4% of Earth's
+            // real radius, even after wheel-equivalent zoom to the outer system.
+            Assert.Less(spacing,view.transform.localScale.x*.04f);
+            LogAssert.NoUnexpectedReceived();
+        }
+        static float FloatSpacing(float value)
+        {
+            value=Mathf.Abs(value);
+            int bits=System.BitConverter.SingleToInt32Bits(value);
+            return System.BitConverter.Int32BitsToSingle(bits+1)-value;
+        }
+        [UnityTest]
         public IEnumerator LegacyJsonParserRetainsDoubleBits()
         {
+            LogAssert.Expect(LogType.Log,"CosmicSandbox startup ready: solar");
             yield return SceneManager.LoadSceneAsync("SolarSystem");yield return null;
             var u=Object.FindAnyObjectByType<UniverseManager>();u.Paused=true;
             var p=new Double3(1000*Astronomy.AU+1,2,-3);
@@ -54,6 +87,7 @@ namespace Cosmic.Tests
         [UnityTest]
         public IEnumerator EarthAndMoonAndBinaryPresetsHaveDistinctDynamics()
         {
+            LogAssert.Expect(LogType.Log,"CosmicSandbox startup ready: solar");
             yield return SceneManager.LoadSceneAsync("SolarSystem");yield return null;
             var u=Object.FindAnyObjectByType<UniverseManager>();u.Paused=true;
             u.LoadPreset("earthmoon");Assert.AreEqual(2,u.Simulation.Bodies.Count);Assert.NotNull(u.Simulation.Find("moon"));
@@ -63,6 +97,7 @@ namespace Cosmic.Tests
         [UnityTest]
         public IEnumerator HDRSceneHasVisibleSunAndDetailedPlanetPixels()
         {
+            LogAssert.Expect(LogType.Log,"CosmicSandbox startup ready: solar");
             yield return SceneManager.LoadSceneAsync("SolarSystem");yield return null;
             var u=Object.FindAnyObjectByType<UniverseManager>();u.Paused=true;u.Trails=false;
             foreach(var canvas in Object.FindObjectsByType<Canvas>())canvas.enabled=false;

@@ -1,30 +1,27 @@
-Unity 6000.6.5f1 / URP 17.6.0 source ZIP verification, 2026-10-14.
-Archive extracted to /tmp/cosmic-unity66-source/CosmicSandboxUnity.
-CRC verified; source contains all native SolarSystem mesh/material/scene/pipeline assets.
-No Library cache, Unity binaries, license, removed-engine dependency or claimed EXE.
+Unity 6000.6.5f1 / URP 17.6.0 repair-source verification, 2026-10-14.
+Source archive contains native SolarSystem scene, procedural mesh/material/pipeline,
+module-scoped compiler model and all Windows build/verification tools.
+No Unity binaries, license, Library, placeholder EXE or removed-engine dependency.
 
-Actual commands completed successfully in the clean extracted directory:
-bash Tools/test-core.sh
-  TOTAL 29 core checks passed
-python3 Tools/typecheck-unity.py
-  PASS Cosmic.Core / Cosmic.Runtime / Cosmic.Editor / Cosmic.PlayModeTests / Cosmic.EditModeTests
-python3 Tools/check-hlsl.py
-  TOTAL 16 HLSL stages/variants compiled against bundled URP 17.6.0 includes
-python3 Tools/check-project.py
-  PASS packages/asmdef/scene resources, global URP, all six Quality levels and SolarSystem hierarchy
+Verified current source:
+- 5 asmdef assemblies compile against manifest-scoped real Unity 6.6 modules/DLLs
+  with actual Common + LongLiving analyzers and warnings-as-errors.
+- Actual compiler negative probes reproduce CS0103 without screencapture and
+  UAC0005 for the previous AppDomain scan.
+- 5 import/module regression checks, enabled-package GUID/asmdef checks,
+  all six Quality pipelines and disabled incompatible GPU Resident Drawer pass.
+- 8 Windows verifier rejection/integrity tests pass (temporary fixtures only).
+- Four real official Windows-module binaries pass the x64 PE parser.
+- PowerShell7.6.7 parses four scripts, accepts two synthetic report fixtures,
+  rejects nine invalid/stale fixtures and checks graphics-enabled PlayMode CLI.
+- Updated ZIPs verified for CRC, SHA256 and exact source-byte equality;
+  clean extracted source passes project checks and build-verifier tests.
 
-The final material converter additionally invokes the official installed Lit ShaderGUI
-validation to synchronize transparency/keyword/pass state. The five assemblies were
-recompiled against the actual 6.6 DLLs after that edit (see csharp-results.txt).
-Native import, three EditMode tests, five PlayMode tests, Windows build/run and GPU
-screenshots remain unexecuted because Unity activation exits 198 before project import.
+Unchanged physics/shader baseline: 29 CPU checks and 16 DXC/URP stages passed
+previously; no physics data/solver or shader HLSL changed in this repair.
+The new camera test compiled but has not executed natively.
 
-Safe Mode follow-up after user-provided Windows screenshot:
-TagManager uses the official Unity 6.6 template schema with explicit empty strings.
-Both test asmdefs remove TestRunner references already supplied by TestAssemblies.
-Three import-configuration regression checks and the complete project checks passed.
-All five C# assemblies were recompiled successfully against the real Unity 6.6 DLLs.
-The refreshed source ZIP was extracted to /tmp/cosmic-unity66-safe-mode-source;
-check-project.py passed there including the three new regression checks.
-Both release ZIPs passed CRC, source-byte equality and SHA256 verification.
-No native Windows reimport/PlayMode was performed in cloud.
+Actual native Win64 build was attempted after official Windows Mono installation.
+Editor exited198 before import/executeMethod due missing license entitlement;
+CosmicSandboxBuild/CosmicSandbox.exe is absent. Native3EditMode/6PlayMode,
+Windows launch, pixels and RTX benchmarks have not run.

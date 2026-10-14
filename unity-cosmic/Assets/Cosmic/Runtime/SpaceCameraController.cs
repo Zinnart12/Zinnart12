@@ -12,6 +12,9 @@ namespace Cosmic.Runtime
         Double3 target,flyPosition;
         string followId;
         double distance=1000,desiredDistance=1000;
+        double preferredMetresToScene=32/Astronomy.AU;
+        const double MaximumRenderDistance=64;
+        public double ObservationDistance => distance;
         float yaw=25,pitch=35;
         Vector2 clickStart;
         bool dragging,fly;
@@ -25,8 +28,8 @@ namespace Cosmic.Runtime
                 max=new Double3(Math.Max(max.X,b.Position.X+b.Radius),Math.Max(max.Y,b.Position.Y+b.Radius),Math.Max(max.Z,b.Position.Z+b.Radius)); }
             target=(min+max)*.5;followId=null;fly=false;
             double extent=Math.Max((max-min).Length*.5,1);
-            universe.Coordinates.MetresToScene=32/Astronomy.AU;
-            if(extent*universe.Coordinates.MetresToScene<1)universe.Coordinates.MetresToScene=10/extent;
+            preferredMetresToScene=32/Astronomy.AU;
+            if(extent*preferredMetresToScene<1)preferredMetresToScene=10/extent;
             double halfAngle=cameraComponent.fieldOfView*Math.PI/360;
             double fit=Math.Min(halfAngle,Math.Atan(Math.Tan(halfAngle)*cameraComponent.aspect));
             desiredDistance=distance=extent/Math.Sin(fit)*1.15;yaw=25;pitch=35;
@@ -35,8 +38,14 @@ namespace Cosmic.Runtime
         {
             var b=universe.Selected;if(b==null)return;
             target=b.Position;followId=b.Id;fly=false;
-            universe.Coordinates.MetresToScene=Math.Max(32/Astronomy.AU,.75/b.Radius);
+            preferredMetresToScene=Math.Max(32/Astronomy.AU,.75/b.Radius);
             desiredDistance=distance=b.Radius*5;
+        }
+        public void SetObservationDistance(double metres,bool immediate=false)
+        {
+            if(!Numeric.Finite(metres) || metres<=0)throw new ArgumentOutOfRangeException(nameof(metres));
+            desiredDistance=Numeric.Clamp(metres,MinimumDistance(),1e22);
+            if(immediate)distance=desiredDistance;
         }
         public void SetFly(bool enabled)
         {
@@ -66,7 +75,7 @@ namespace Cosmic.Runtime
                 dragging=false;
             }
             if(dragging && Input.GetMouseButton(0)) {yaw+=Input.GetAxisRaw("Mouse X")*2.5f;pitch=Mathf.Clamp(pitch-Input.GetAxisRaw("Mouse Y")*2.5f,-85,85);}
-            if(!overUI)desiredDistance=Numeric.Clamp(desiredDistance*Math.Exp(-Input.mouseScrollDelta.y*.16),MinimumDistance(),1e22);
+            if(!overUI)SetObservationDistance(desiredDistance*Math.Exp(-Input.mouseScrollDelta.y*.16));
             distance += (desiredDistance-distance)*(1-Math.Exp(-Time.unscaledDeltaTime*12));
             if(!overUI && (Input.GetKey(KeyCode.W)||Input.GetKey(KeyCode.S)||Input.GetKey(KeyCode.A)||Input.GetKey(KeyCode.D)||Input.GetKey(KeyCode.Q)||Input.GetKey(KeyCode.E)))
             {
@@ -85,6 +94,10 @@ namespace Cosmic.Runtime
             var followed=universe.Simulation.Find(followId);
             if(!fly && followed!=null)target=followed.Position;
             Double3 position=fly?flyPosition:target-ViewDirection()*distance;
+            // Keep the float rendering coordinates small when zooming out after
+            // focusing a planet. The physical camera state stays in metres.
+            double extent=Math.Max(distance,(position-target).Length);
+            universe.Coordinates.MetresToScene=Math.Min(preferredMetresToScene,MaximumRenderDistance/Math.Max(extent,1));
             universe.Coordinates.Origin=fly?position:target;
             transform.position=universe.ToScene(position);transform.rotation=Quaternion.Euler(pitch,yaw,0);
             float sceneDistance=(float)(distance*universe.Coordinates.MetresToScene);

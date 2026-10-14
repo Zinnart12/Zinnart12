@@ -30,6 +30,7 @@ namespace Cosmic.Runtime
             (root.GetComponent<SpaceBackground>()??root.AddComponent<SpaceBackground>()).Initialize(camera);
             var ui=new GameObject("Sandbox UI").AddComponent<SandboxUIController>();
             ui.Initialize(universe,controls,showMenu);
+            if(universe.LastError==null)Debug.Log("CosmicSandbox startup ready: "+initialPreset);
         }
     }
 }

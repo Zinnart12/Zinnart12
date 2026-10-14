@@ -1,0 +1,7 @@
+Native independent compiler diagnostic evidence (expected rejected builds):
+
+Missing module:
+Assets/Tests/PlayMode/PhaseOneSceneTests.cs(107,29): error CS0103: The name 'ScreenCapture' does not exist in the current context
+
+Deprecated assembly scan:
+TestResults/Typecheck/ObsoleteAssemblyScan.cs(1,97): error UAC0005: AppDomain.GetAssemblies() in Unity may return already unloaded assemblies and result in errors or leaks. Use Unity APIs instead, such as 'CurrentAssemblies.GetLoadedAssemblies()' or 'TypeCache.GetTypesDerivedFrom()'.

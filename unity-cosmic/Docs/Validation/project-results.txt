@@ -1,13 +1,15 @@
-PASS 3 Safe Mode regression checks; TagManager has 32 explicit layer/rendering slots; no duplicate implicit TestRunner references
+PASS 5 import/module regression checks; TagManager has 32 explicit layer/rendering slots; no duplicate implicit TestRunner references
 PASS asmdef dependency names: Assets/Cosmic/Core/Cosmic.Core.asmdef
 PASS asmdef dependency names: Assets/Cosmic/Editor/Cosmic.Editor.asmdef
 PASS asmdef dependency names: Assets/Cosmic/Runtime/Cosmic.Runtime.asmdef
 PASS asmdef dependency names: Assets/Tests/EditMode/Cosmic.EditModeTests.asmdef
 PASS asmdef dependency names: Assets/Tests/PlayMode/Cosmic.PlayModeTests.asmdef
+PASS project APIs and asmdef references use enabled module/package graph
 PASS every direct dependency matches bundled Unity 6000.6.5f1 packages
 PASS complete scene resource references: Assets/Scenes/Sandbox.unity
 PASS complete scene resource references: Assets/Scenes/MainMenu.unity
 PASS complete scene resource references: Assets/Scenes/SolarSystem.unity
 PASS global URP and all 6 Quality levels assigned
+PASS Forward Renderer has compatible GPU Resident Drawer setting
 PASS SolarSystem hierarchy and runtime/Editor separation
 NOTE: static checks do not replace Unity scene import/PlayMode.

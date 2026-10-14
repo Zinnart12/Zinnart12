@@ -1,5 +1,9 @@
-PASS real Unity API compile: Cosmic.Core
-PASS real Unity API compile: Cosmic.Runtime
-PASS real Unity API compile: Cosmic.Editor
-PASS real Unity API compile: Cosmic.PlayModeTests
-PASS real Unity API compile: Cosmic.EditModeTests
+PASS manifest/asmdef-scoped Unity API + analyzer compile: Cosmic.Core
+PASS manifest/asmdef-scoped Unity API + analyzer compile: Cosmic.Runtime
+PASS manifest/asmdef-scoped Unity API + analyzer compile: Cosmic.Editor
+PASS manifest/asmdef-scoped Unity API + analyzer compile: Cosmic.PlayModeTests
+PASS manifest/asmdef-scoped Unity API + analyzer compile: Cosmic.EditModeTests
+PASS enabled engine modules resolved through manifest and bundled transitive package dependencies
+NOTE external package source metadata is not bundled; no project asmdef directly references: com.unity.nuget.mono-cecil, com.unity.profiling.core, com.unity.searcher
+PASS compiler regression: removing screencapture rejects the unchanged screenshot test
+PASS compiler regression: real Unity analyzer rejects assembly scanning with UAC0005
