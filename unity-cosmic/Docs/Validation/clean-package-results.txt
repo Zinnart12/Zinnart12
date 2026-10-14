@@ -1,23 +1,20 @@
-Source archive extracted to /tmp/cosmic-unity-clean-source/CosmicSandboxUnity.
-No Library cache, Unity Editor binaries, license or build artifacts in the ZIP.
-Archive CRC check passed; archive contains all component metadata and source.
+Unity 6000.6.5f1 / URP 17.6.0 source ZIP verification, 2026-10-14.
+Archive extracted to /tmp/cosmic-unity66-source/CosmicSandboxUnity.
+CRC verified; source contains all native SolarSystem mesh/material/scene/pipeline assets.
+No Library cache, Unity binaries, license, removed-engine dependency or claimed EXE.
 
-Actual clean-directory commands and results, 2026-10-14:
-
+Actual commands completed successfully in the clean extracted directory:
 bash Tools/test-core.sh
   TOTAL 29 core checks passed
 python3 Tools/typecheck-unity.py
-  PASS Cosmic.Core / Cosmic.Runtime / Cosmic.Editor / Cosmic.PlayModeTests
+  PASS Cosmic.Core / Cosmic.Runtime / Cosmic.Editor / Cosmic.PlayModeTests / Cosmic.EditModeTests
 python3 Tools/check-hlsl.py
-  TOTAL 16 HLSL stages/variants compiled
+  TOTAL 16 HLSL stages/variants compiled against bundled URP 17.6.0 includes
 python3 Tools/check-project.py
-  PASS asmdef/package/serialized component script references
+  PASS packages/asmdef/scene resources, global URP, all six Quality levels and SolarSystem hierarchy
 
-Unity native import/PlayMode/Windows execution remain blocked by license.
-
-After removing the old engine project and renaming the fixture files:
-Source ZIP extracted to /tmp/cosmic-unity-only-source/CosmicSandboxUnity.
-29 CPU checks, four C# assembly compiles and static project checks passed.
-Preset/reference data and their metadata GUIDs are unchanged.
-The archive contains no removed-engine source, bridge or documentation.
-HLSL source did not change; the earlier 16-stage result above is retained.
+The final material converter additionally invokes the official installed Lit ShaderGUI
+validation to synchronize transparency/keyword/pass state. The five assemblies were
+recompiled against the actual 6.6 DLLs after that edit (see csharp-results.txt).
+Native import, three EditMode tests, five PlayMode tests, Windows build/run and GPU
+screenshots remain unexecuted because Unity activation exits 198 before project import.

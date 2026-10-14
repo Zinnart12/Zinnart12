@@ -9,17 +9,17 @@ import pathlib
 import subprocess
 
 root = pathlib.Path(__file__).resolve().parents[1]
-editor = pathlib.Path(os.environ.get('COSMIC_UNITY_EDITOR_ROOT', '/workspace/.cache/cosmic-unity/unity/Editor'))
+editor = pathlib.Path(os.environ.get('COSMIC_UNITY_EDITOR_ROOT', '/workspace/.cache/cosmic-unity/unity66/Editor'))
 sdk = pathlib.Path(os.environ.get('COSMIC_DOTNET_ROOT', '/workspace/.cache/cosmic-unity/dotnet'))
 output = root / 'TestResults' / 'Typecheck'
 output.mkdir(parents=True, exist_ok=True)
 compiler = sorted((sdk / 'sdk').glob('*/Roslyn/bincore/csc.dll'))[-1]
 standard = editor / 'Data/NetStandard/ref/2.1.0/netstandard.dll'
-template = next((editor / 'Data/Resources/PackageManager/ProjectTemplates/libcache').glob('com.unity.template.3d-cross-platform-*/ScriptAssemblies'))
+template = next((editor / 'Data/Resources/PackageManager/ProjectTemplates/libcache').glob('com.unity.template.urp-blank-*/ScriptAssemblies'))
 native = sorted((editor / 'Data/Managed/UnityEngine').glob('*.dll'))
 packages = sorted(template.glob('Unity*.dll'))
 if not standard.exists() or not packages:
-    raise SystemExit('Official Unity 6000.0.65f1 Editor/reference assemblies are required.')
+    raise SystemExit('Official Unity 6000.6.5f1 Editor/reference assemblies are required.')
 
 
 def compile_assembly(name, directory, extra=(), engine=True, define=''):
@@ -41,6 +41,7 @@ def compile_assembly(name, directory, extra=(), engine=True, define=''):
 
 core = compile_assembly('Cosmic.Core', 'Assets/Cosmic/Core', engine=False)
 runtime = compile_assembly('Cosmic.Runtime', 'Assets/Cosmic/Runtime', [core])
-compile_assembly('Cosmic.Editor', 'Assets/Cosmic/Editor', [core, runtime], define='UNITY_EDITOR;UNITY_6000_0_OR_NEWER')
-nunit = editor / 'Data/Resources/PackageManager/BuiltInPackages/com.unity.ext.nunit/net40/unity-custom/nunit.framework.dll'
+editor_assembly = compile_assembly('Cosmic.Editor', 'Assets/Cosmic/Editor', [core, runtime], define='UNITY_EDITOR;UNITY_6000_0_OR_NEWER;UNITY_6000_6_OR_NEWER')
+nunit = next((editor / 'Data/Resources/PackageManager/BuiltInPackages/com.unity.ext.nunit').rglob('nunit.framework.dll'))
 compile_assembly('Cosmic.PlayModeTests', 'Assets/Tests/PlayMode', [core, runtime, nunit], define='UNITY_INCLUDE_TESTS')
+compile_assembly('Cosmic.EditModeTests', 'Assets/Tests/EditMode', [core, runtime, editor_assembly, nunit], define='UNITY_EDITOR;UNITY_INCLUDE_TESTS')

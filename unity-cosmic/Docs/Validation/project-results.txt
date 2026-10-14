@@ -1,9 +1,12 @@
 PASS asmdef dependency names: Assets/Cosmic/Core/Cosmic.Core.asmdef
 PASS asmdef dependency names: Assets/Cosmic/Editor/Cosmic.Editor.asmdef
 PASS asmdef dependency names: Assets/Cosmic/Runtime/Cosmic.Runtime.asmdef
+PASS asmdef dependency names: Assets/Tests/EditMode/Cosmic.EditModeTests.asmdef
 PASS asmdef dependency names: Assets/Tests/PlayMode/Cosmic.PlayModeTests.asmdef
-PASS every direct dependency matches bundled Unity 6000.0.65f1 packages
-PASS serialized component script references: Assets/Scenes/Sandbox.unity
-PASS serialized component script references: Assets/Scenes/MainMenu.unity
-PASS serialized component script references: Assets/Resources/Prefabs/CelestialBody.prefab
+PASS every direct dependency matches bundled Unity 6000.6.5f1 packages
+PASS complete scene resource references: Assets/Scenes/Sandbox.unity
+PASS complete scene resource references: Assets/Scenes/MainMenu.unity
+PASS complete scene resource references: Assets/Scenes/SolarSystem.unity
+PASS global URP and all 6 Quality levels assigned
+PASS SolarSystem hierarchy and runtime/Editor separation
 NOTE: static checks do not replace Unity scene import/PlayMode.

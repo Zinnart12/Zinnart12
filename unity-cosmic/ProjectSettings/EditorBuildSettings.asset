@@ -9,6 +9,6 @@ EditorBuildSettings:
     path: Assets/Scenes/MainMenu.unity
     guid: fd83e013f805c68e0a0ef073608b23ed
   - enabled: 1
-    path: Assets/Scenes/Sandbox.unity
-    guid: 84460894c3d8135b2b939a0684f83840
+    path: Assets/Scenes/SolarSystem.unity
+    guid: 69d7b7d31514d69a00d29895e73609cb
   m_configObjects: {}

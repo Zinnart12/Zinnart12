@@ -12,3 +12,4 @@ Tools/obj/
 *.sln
 *.user
 *.pidb
+__pycache__/

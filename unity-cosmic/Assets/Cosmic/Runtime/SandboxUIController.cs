@@ -104,6 +104,8 @@ namespace Cosmic.Runtime
             float scale=canvas.scaleFactor;
             var rect=new Rect(p.x,p.y-26*scale,120*scale,26*scale);
             bool visible=labels && !menu.activeSelf && p.z>0 && p.x>325*scale && p.x+rect.width<Screen.width-335*scale && p.y>110*scale && p.y+rect.height<Screen.height-85*scale;
+            float meshPixels=universe.DisplayRadius(b)*Screen.height/(2*Mathf.Tan(camera.fieldOfView*Mathf.Deg2Rad*.5f)*Mathf.Max(p.z,.0001f));
+            if(meshPixels>14)visible=false;
             foreach(var other in occupied)if(rect.Overlaps(other))visible=false;
             marker.SetActive(visible);if(!visible)return;occupied.Add(rect);
             marker.transform.position=new Vector3(p.x,p.y,0);

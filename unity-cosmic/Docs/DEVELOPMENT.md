@@ -1,6 +1,6 @@
 # Cấu trúc và tiến độ Unity 6
 
-Project: Unity 6000.0.65f1 LTS, URP 17.0.4, C#, HLSL và uGUI.
+Project: Unity 6000.6.5f1, URP 17.6.0, C#, HLSL và uGUI.
 Source Phase 1 được kiểm tra độc lập; native PlayMode còn chờ Unity license.
 Không chuyển sang Phase 2 cho đến khi cổng chạy scene/pixel của Phase 1 pass.
 
@@ -19,7 +19,8 @@ Không chuyển sang Phase 2 cho đến khi cổng chạy scene/pixel của Phas
 | `Runtime/PlanetGenerator.cs`, `CelestialBodyView.cs` | Procedural mesh, LOD, spin, SI lighting và trail |
 | `Runtime/SpaceBackground.cs` | 4.096 sao nền instanced |
 | `Runtime/SandboxUIController.cs` | Menu, inspector đọc, danh sách, marker và điều khiển thời gian |
-| `Editor/ProjectSetup.cs`, `WindowsBuild.cs` | Tạo native URP asset, material và build Windows x64 |
+| `Editor/ProjectBuilder.cs`, `MaterialRepair.cs`, `SolarSystemBuilder.cs` | Repair package/pipeline/material, dựng scene và kiểm tra build |
+| `Editor/WindowsBuild.cs` | Windows x64 / DirectX 11 build |
 | `Editor/SnapshotImporter.cs` | Kiểm tra/import JSON snapshot, không sửa file nguồn |
 | `StreamingAssets/PresetCatalog.json` | 9 preset và thông số thiên thể, giữ đủ metadata compact |
 | `StreamingAssets/NBodyReferenceSteps.json` | Oracle một bước và bit tham chiếu độc lập, không sinh lại bằng solver đang test |
@@ -31,9 +32,9 @@ Project hiện tại không cần source hoặc công cụ của engine cũ đ�
 ## Hierarchy
 
 ```text
-MainMenu.unity / Sandbox.unity
+MainMenu.unity / SolarSystem.unity
   Cosmic Bootstrap
-  Universe (UniverseManager, Volume, SpaceBackground)
+  SimulationManager (UniverseManager, Volume, SpaceBackground)
     Celestial Body [prefab]
       Axial Rotation [LODGroup]
         Surface LOD 0 / 1 / 2
@@ -58,12 +59,12 @@ scattering và mây vẫn là lớp mesh xấp xỉ. Compact runtime chưa bật
 
 | Phase | Cổng kiểm thử | Hiện tại |
 | --- | --- | --- |
-| 1 — Foundation | CPU/reference/energy/FPS/double; Unity import + 5 PlayMode tests | Independent checks pass; native runtime thiếu license |
-| 2 — Interactive Sandbox | Add/Delete/Replace/Clone/Save/Load; Sun Removed qua UI | Chưa bắt đầu |
-| 3 — Destruction | Collision conservation, physical debris, tidal stages, intact SMBH capture | Chưa bắt đầu |
-| 4 — Graphics | Native GPU pixels, lensing/photon/shadow, evolving plasma, controlled HDR | Chưa bắt đầu; surface HLSL nền đã có |
-| 5 — Advanced Objects | Neutron/pulsar/comet/galaxy/supernova có logic và model limits | Chưa bắt đầu |
-| 6 — Optimization | Jobs/Burst/Barnes–Hut so với exact solver; hardware benchmark; Windows build/run | Chưa bắt đầu |
+| 1 — Foundation | CPU/reference/energy/FPS/double; Unity import + 3 EditMode + 5 PlayMode tests | Independent checks pass; native runtime thiếu license |
+| 2 — Physics/Interaction | Jobs/Burst double3, attracting/non-attracting, Add/Delete/Replace | Chờ cổng runtime Phase 1 |
+| 3 — Graphics/Library | Planet/Star/BlackHole HLSL, neutron/pulsar, thư viện | Surface HLSL nền đã có; phần nâng cao còn chờ |
+| 4 — Destruction | Tidal stages, collision/heat/debris, intact SMBH capture | Chưa bắt đầu |
+| 5 — Sandbox/Release | Inspector chỉnh sửa, Save/Load, 16 scenarios, Windows build/run | Chưa bắt đầu |
+| Performance validation | RTX 3050 Ti / i7-11800H / 1080p benchmark | Chưa đo |
 
 Test Sun Removed và thay nguồn cùng mass hiện chứng minh core Newton,
 chưa chứng minh UI Delete/Replace của Phase 2. Native tests qua

@@ -52,11 +52,12 @@ def main():
         install(file['url'], 'dotnet', 'sha512', file['hash'])
     if args.core_only:
         return
-    if not (CACHE / 'unity/Editor/Unity').exists():
-        release = metadata('https://services.api.unity.com/unity/editor/release/v1/releases?version=6000.0.65f1&limit=1')['results'][0]
+    if not (CACHE / 'unity66/Editor/Unity').exists():
+        release = metadata('https://services.api.unity.com/unity/editor/release/v1/releases?version=6000.6.5f1&limit=1')['results'][0]
         file = next(f for f in release['downloads'] if f['platform'] == 'LINUX' and f['architecture'] == 'X86_64')
-        expected = base64.b64decode(file['integrity'].split('-', 1)[1]).decode()
-        install(file['url'], 'unity', 'md5', expected)
+        raw = base64.b64decode(file['integrity'].split('-', 1)[1])
+        expected = raw.hex() if len(raw) == 16 else raw.decode()
+        install(file['url'], 'unity66', 'md5', expected)
     if not (CACHE / 'dxc/bin/dxc').exists():
         release = metadata('https://api.github.com/repos/microsoft/DirectXShaderCompiler/releases/tags/v1.9.2609')
         file = next(f for f in release['assets'] if f['name'].startswith('linux_dxc'))

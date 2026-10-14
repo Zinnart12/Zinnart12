@@ -1,5 +1,11 @@
 Shader "Cosmic/Planet" {
- Properties { _BaseColor("Base Color",Color)=(.2,.5,.8,1) _Temperature("Temperature K",Float)=288 _Seed("Seed",Float)=1 }
+ Properties {
+  _BaseColor("Base Color",Color)=(.2,.5,.8,1) _Temperature("Temperature K",Float)=288 _Seed("Seed",Float)=1
+  _SurfaceKind("Surface Kind",Float)=0 _IsMars("Mars",Float)=0 _RedSpot("Great Red Spot",Float)=0
+  [HideInInspector] _PreviewFlux("Editor Irradiance",Float)=0
+  [HideInInspector] _PreviewLightDirection("Editor Light Direction",Vector)=(1,0,0,0)
+  [HideInInspector] _PreviewLightColor("Editor Light Color",Color)=(1,.93,.8,1)
+ }
  SubShader { Tags {"RenderPipeline"="UniversalPipeline" "RenderType"="Opaque"}
  Pass { Name "Planet Surface" Tags {"LightMode"="UniversalForward"}
  HLSLPROGRAM
@@ -19,6 +25,7 @@ Shader "Cosmic/Planet" {
    float ice=smoothstep(.79,.94,abs(p.y)+(terrain-.5)*.13)*saturate((300-_Temperature)/30);
    color=lerp(color,float3(.85,.92,.96),ice);
    float illumination=0;[unroll]for(int j=0;j<4;j++)if(j<_StellarCount)illumination+=max(dot(normalize(i.normalWS),_StellarDirection[j].xyz),0)*_StellarFlux[j].w;
+   if(_StellarCount==0 && _PreviewFlux>0)illumination=max(dot(normalize(i.normalWS),normalize(_PreviewLightDirection.xyz)),0)*_PreviewFlux;
    float city=pow(noise3(p*210+_Seed),22)*land*(1-smoothstep(.01,.1,illumination));thermal+=float3(1,.46,.1)*city*.5;
   } else if(_SurfaceKind>1.5 && _SurfaceKind<3.5) {
    float angle=_SimulationTime*(.012+.032*p.y*p.y);

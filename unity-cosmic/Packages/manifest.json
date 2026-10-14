@@ -1,13 +1,15 @@
 {
   "dependencies": {
-    "com.unity.render-pipelines.universal": "17.0.4",
-    "com.unity.test-framework": "1.6.0",
-    "com.unity.ugui": "2.0.0",
+    "com.unity.render-pipelines.universal": "17.6.0",
+    "com.unity.test-framework": "1.8.0",
+    "com.unity.ugui": "2.6.0",
     "com.unity.modules.audio": "1.0.0",
     "com.unity.modules.imgui": "1.0.0",
     "com.unity.modules.imageconversion": "1.0.0",
     "com.unity.modules.jsonserialize": "1.0.0",
     "com.unity.modules.physics": "1.0.0",
-    "com.unity.modules.ui": "1.0.0"
+    "com.unity.modules.ui": "1.0.0",
+    "com.unity.render-pipelines.core": "17.6.0",
+    "com.unity.shadergraph": "17.6.0"
   }
 }

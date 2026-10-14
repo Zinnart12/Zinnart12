@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace Cosmic.Core
 {
-    // Direct port of GravitySolver.gd: symmetric pair forces and velocity Verlet.
+    // Symmetric pair forces and double-precision velocity Verlet.
     public sealed class NBodyGravitySolver
     {
         Double3[] first = Array.Empty<Double3>(), second = Array.Empty<Double3>();

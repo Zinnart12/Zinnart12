@@ -43,7 +43,7 @@ namespace Cosmic.Runtime
         void ConfigureRendering()
         {
             if(!(GraphicsSettings.currentRenderPipeline is UniversalRenderPipelineAsset asset))
-                throw new InvalidOperationException("URP missing. Run Cosmic > Prepare Phase 1 Project in the Editor.");
+                throw new InvalidOperationException("URP missing. Run Cosmic > Repair URP and Solar System in the Editor.");
             pipeline=Instantiate(asset);QualitySettings.renderPipeline=pipeline;
             RenderSettings.ambientMode=AmbientMode.Flat;RenderSettings.ambientLight=Color.black;RenderSettings.skybox=null;
             var volume=gameObject.AddComponent<Volume>();volume.isGlobal=true;

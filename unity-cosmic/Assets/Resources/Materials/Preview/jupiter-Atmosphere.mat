@@ -1,0 +1,41 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!21 &2100000
+Material:
+  serializedVersion: 8
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_Name: jupiter-Atmosphere
+  m_Shader: {fileID: 4800000, guid: 77cb28fd1774604aad232922de2024e3, type: 3}
+  m_Parent: {fileID: 0}
+  m_ModifiedSerializedProperties: 0
+  m_ValidKeywords: []
+  m_InvalidKeywords: []
+  m_LightmapFlags: 4
+  m_EnableInstancingVariants: 0
+  m_DoubleSidedGI: 0
+  m_CustomRenderQueue: -1
+  stringTagMap: {}
+  disabledShaderPasses: []
+  m_LockedProperties:
+  m_SavedProperties:
+    serializedVersion: 3
+    m_TexEnvs: []
+    m_Ints: []
+    m_Floats:
+    - _Temperature: 165.0
+    - _Seed: 7848.0
+    - _SurfaceKind: 2
+    - _IsMars: 0
+    - _RedSpot: 1
+    - _PreviewFlux: 0.039415426276224796
+    - _AtmosphereStrength: 1
+    m_Colors:
+    - _BaseColor: {r: 0.6938717612919899, g: 0.44520119451622786, b: 0.2581828529215958, a: 1}
+    - _TemperatureColor: {r: 1, g: 0.88, b: 0.66, a: 1}
+    - _PreviewLightDirection: {r: -0.6216099682706644, g: -0.017771598895254676, b: -0.7831252885836658, a: 0}
+    - _SunDirection: {r: -0.6216099682706644, g: -0.017771598895254676, b: -0.7831252885836658, a: 0}
+    - _PreviewLightColor: {r: 1, g: 0.88, b: 0.66, a: 1}
+  m_BuildTextureStacks: []

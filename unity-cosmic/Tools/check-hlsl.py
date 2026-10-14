@@ -10,7 +10,7 @@ import re
 import subprocess
 
 root = pathlib.Path(__file__).resolve().parents[1]
-editor = pathlib.Path(os.environ.get('COSMIC_UNITY_EDITOR_ROOT', '/workspace/.cache/cosmic-unity/unity/Editor'))
+editor = pathlib.Path(os.environ.get('COSMIC_UNITY_EDITOR_ROOT', '/workspace/.cache/cosmic-unity/unity66/Editor'))
 dxc = pathlib.Path(os.environ.get('COSMIC_DXC', '/workspace/.cache/cosmic-unity/dxc/bin/dxc'))
 output = root / 'TestResults' / 'HLSL'
 output.mkdir(parents=True, exist_ok=True)
@@ -29,7 +29,7 @@ for shader in sorted((root / 'Assets/Cosmic/Shaders').glob('*.shader')):
         for stage, entry in [('vs', vertex), ('ps', fragment)]:
             name = shader.stem + ('_instanced' if instanced else '') + '_' + stage
             args = [str(dxc), '-WX', '-flegacy-macro-expansion', '-T', stage + '_6_0', '-E', entry, '-D', 'SHADER_API_D3D11=1', '-D', 'SHADER_TARGET=45',
-                    '-D', 'UNITY_VERSION=600000', '-D', 'UNITY_COMPILER_HLSL=1',
+                    '-D', 'UNITY_VERSION=600006', '-D', 'UNITY_COMPILER_HLSL=1',
                     '-I', str(output), '-I', str(root / 'Assets/Cosmic/Shaders'), '-I', str(editor / 'Data/CGIncludes'),
                     '-Fo', str(output / (name + '.dxil')), str(source)]
             if instanced:

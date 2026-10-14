@@ -1,5 +1,10 @@
 Shader "Cosmic/Rings" {
- Properties { _BaseColor("Tint",Color)=(.7,.6,.4,1) }
+ Properties {
+  _BaseColor("Tint",Color)=(.7,.6,.4,1) _Seed("Seed",Float)=1 _SunDirection("Sun Direction",Vector)=(1,0,0,0)
+  [HideInInspector] _PreviewFlux("Editor Irradiance",Float)=0
+  [HideInInspector] _PreviewLightDirection("Editor Light Direction",Vector)=(1,0,0,0)
+  [HideInInspector] _PreviewLightColor("Editor Light Color",Color)=(1,.93,.8,1)
+ }
  SubShader {Tags {"RenderPipeline"="UniversalPipeline" "Queue"="Transparent" "RenderType"="Transparent"}
  Pass {Tags {"LightMode"="UniversalForward"} Blend SrcAlpha OneMinusSrcAlpha ZWrite Off Cull Off
  HLSLPROGRAM

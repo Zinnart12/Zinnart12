@@ -1,5 +1,5 @@
 Shader "Cosmic/Atmosphere" {
- Properties { _BaseColor("Tint",Color)=(.15,.42,.85,1) }
+ Properties { _BaseColor("Tint",Color)=(.15,.42,.85,1) _AtmosphereStrength("Atmosphere Strength",Float)=.4 _SunDirection("Sun Direction",Vector)=(1,0,0,0) }
  SubShader {Tags {"RenderPipeline"="UniversalPipeline" "Queue"="Transparent" "RenderType"="Transparent"}
  Pass {Tags {"LightMode"="UniversalForward"} Blend One One ZWrite Off Cull Front
  HLSLPROGRAM

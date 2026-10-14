@@ -60,6 +60,7 @@ namespace Cosmic.Runtime
             spin.localRotation=Quaternion.Euler(0,0,(float)body.AxialTilt)*Quaternion.Euler(0,(float)rotation,0);
             ColorUtility.TryParseHtmlString("#"+body.Color,out var color);
             properties.Clear();properties.SetColor("_BaseColor",color.linear);properties.SetFloat("_Seed",(float)body.Seed);
+            properties.SetFloat("_PreviewFlux",0);
             properties.SetFloat("_Temperature",(float)body.Temperature);
             properties.SetFloat("_SimulationTime",(float)(universe.Simulation.Time%1e6));
             properties.SetFloat("_SurfaceKind",Array.IndexOf(new[]{"earth","rocky","gas","ice","lava","ocean"},body.Surface));

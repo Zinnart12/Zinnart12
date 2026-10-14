@@ -1,25 +1,29 @@
-# COSMIC SANDBOX 3D — Unity 6
+# COSMIC SANDBOX 3D — Unity 6.6 — URP repair
 
-Source **Phase 1** cho Unity **6000.0.65f1 LTS**, C#, URP **17.0.4**, uGUI,
+Source **Phase 1** cho Unity **6000.6.5f1**, C#, URP **17.6.0**, uGUI,
 Windows x64. Đây là dự án native Unity, mở trực tiếp bằng Unity Hub.
 
-**Trạng thái:** solver, dữ liệu, source camera/UI/shader đã được chuyển và kiểm
-tra độc lập. Play Mode còn chờ license Unity; Phase 1 chưa vượt cổng kiểm thử
-chạy game. Chưa có bản Unity EXE và chưa chuyển sang Phase 2–6. Xem
+**Trạng thái:** source Phase 1 sửa URP/scene đã được kiểm tra độc lập bằng
+DLL Unity 6.6, DXC và kiểm tra GUID. Project có đầy đủ scene/material/mesh
+trong source; không cần gán shader thủ công cho từng hành tinh. Play Mode còn chờ license Unity; Phase 1 chưa vượt cổng kiểm thử
+chạy game. Chưa có bản Unity EXE và chưa chuyển sang Phase 2–5. Xem
 [VALIDATION.md](VALIDATION.md) để phân biệt kết quả đã chạy và kiểm tra còn chờ.
+
+Xem [Docs/URP_REPAIR.md](Docs/URP_REPAIR.md) cho nguyên nhân, cách sửa project
+có material/package bổ sung và những kiểm tra native còn chờ.
 
 ## Mở dự án
 
 1. Cài Unity Hub, kích hoạt license Unity hợp lệ trên máy của bạn.
-2. Cài **6000.0.65f1** cùng **Windows Build Support (Mono)**. Version/hash được
+2. Cài **6000.6.5f1** cùng **Windows Build Support (Mono)**. Version/hash được
    xác nhận từ API release chính thức của Unity.
 3. Hub → Add project from disk → chọn thư mục `unity-cosmic`, hoặc
    `CosmicSandboxUnity` sau khi giải nén `Releases/cosmic-unity-phase1-source.zip`.
-4. Chờ package import và C# compile. `ProjectSetup` tự tạo/persist URP renderer,
-   pipeline và material bằng API Unity. Nếu cần, chọn **Cosmic → Prepare Phase 1
-   Project**. Không ghi đè scene, prefab hoặc material đã có.
+4. Chờ package import và C# compile. Project đã có URP renderer, pipeline, material và preview đầy đủ.
+   Chọn **Cosmic → Repair URP and Solar System** để kiểm tra/sửa các material
+   bổ sung và gán pipeline cho mọi mức Quality.
 5. Mở `Assets/Scenes/MainMenu.unity` rồi nhấn **Play**. Hoặc mở
-   `Assets/Scenes/Sandbox.unity` để vào Solar System trực tiếp.
+   `Assets/Scenes/SolarSystem.unity` để vào Solar System trực tiếp.
 
 Source có scene `.unity`, prefab `.prefab`, `.meta` GUID ổn định, asmdef,
 package manifest và Editor build scripts. Dữ liệu thiên thể và bộ kết quả tham
@@ -36,7 +40,7 @@ chiếu được đóng gói sẵn trong project, không cần công cụ chuy�
   sách CPU được giữ để tính tiếp, UI báo `solver backlog`; không nhảy đồng hồ
   qua phần chưa tích phân. Pause và đổi preset xóa backlog.
 - Baseline va chạm swept-sphere hợp nhất không đàn hồi, bảo toàn khối lượng,
-  động lượng, thể tích và tăng nhiệt. Phân mảnh/miệng hố vật lý là Phase 3.
+  động lượng, thể tích và tăng nhiệt. Phân mảnh/miệng hố vật lý là Phase 4.
 - Camera orbit/fly, zoom mượt, focus/follow, floating origin và thay đổi đơn vị
   render để nhìn cận cảnh. Trừ tọa độ double trước khi chuyển `Vector3` float.
 - UI menu, danh sách thiên thể, inspector vật lý, preset, Pause/Play, Step,
@@ -81,7 +85,7 @@ khi áp dụng. Bộ tham chiếu độc lập nằm trong `NBodyReferenceSteps.
 
 Trong Unity chọn **Cosmic → Import Validated Snapshot JSON** để kiểm tra và
 lưu JSON schema 1 trong `StreamingAssets/ImportedSaves`. Đây là công cụ dữ liệu;
-Save/Load trong game và Add/Delete/Replace/Clone là Phase 2.
+Add/Delete/Replace/Clone thuộc Phase 2; Save/Load trong game thuộc Phase 5.
 
 [Docs/DEVELOPMENT.md](Docs/DEVELOPMENT.md) có cấu trúc module, giới hạn và
 cổng kiểm thử từng phase. Project và ZIP source chỉ chứa nền tảng Unity.
@@ -101,10 +105,11 @@ Cloud Linux bị hạn chế named mutex của CLI dùng `bash Tools/test-core.s
 Với Editor có license trên Windows:
 
 ```powershell
-./Tools/test-unity.ps1 -Unity 'C:/Program Files/Unity/Hub/Editor/6000.0.65f1/Editor/Unity.exe'
+./Tools/test-unity.ps1 -Unity 'C:/Program Files/Unity/Hub/Editor/6000.6.5f1/Editor/Unity.exe'
 ```
 
-Hoặc Window → General → Test Runner → PlayMode → Run All. Có năm test scene,
+Hoặc Window → General → Test Runner → EditMode/PlayMode → Run All. Có ba
+test Editor (Quality, Lit inspector/material conversion, solar hierarchy) và năm test scene,
 focus/SI, JSON double, preset và pixel thật của Sun/Earth/Jupiter. Bài pixel
 cần GPU/cửa sổ hiển thị, không dùng `-nographics`. Kết quả/ảnh vào
 `TestResults`, không ghi đè save người chơi.
@@ -114,7 +119,7 @@ cần GPU/cửa sổ hiển thị, không dùng `-nographics`. Kết quả/ảnh
 Sau khi PlayMode pass, chọn **Cosmic → Build Windows x64** hoặc:
 
 ```powershell
-./Tools/build-windows.ps1 -Unity 'C:/Program Files/Unity/Hub/Editor/6000.0.65f1/Editor/Unity.exe'
+./Tools/build-windows.ps1 -Unity 'C:/Program Files/Unity/Hub/Editor/6000.6.5f1/Editor/Unity.exe'
 ```
 
 Output: `Builds/Windows/CosmicSandbox.exe`. Phân phối **toàn bộ thư mục**
@@ -122,4 +127,4 @@ Windows gồm EXE, UnityPlayer.dll và dữ liệu đi kèm. Build script kiểm
 Windows support module và `BuildReport`; không báo thành công khi build lỗi.
 
 Chưa benchmark trên i7-11800H / RTX 3050 Ti / RAM 16 GB hoặc chạy Windows 11.
-60 FPS/1080p là mục tiêu Phase 6, chưa phải kết quả đo.
+60 FPS/1080p là mục tiêu kiểm thử hiệu suất cuối dự án, chưa phải kết quả đo.

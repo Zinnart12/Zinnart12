@@ -6,7 +6,7 @@ import pathlib
 import re
 
 root = pathlib.Path(__file__).resolve().parents[1]
-editor = pathlib.Path(os.environ.get('COSMIC_UNITY_EDITOR_ROOT', '/workspace/.cache/cosmic-unity/unity/Editor'))
+editor = pathlib.Path(os.environ.get('COSMIC_UNITY_EDITOR_ROOT', '/workspace/.cache/cosmic-unity/unity66/Editor'))
 packages = editor / 'Data/Resources/PackageManager/BuiltInPackages'
 known = {}
 for base in [root / 'Assets', packages]:
@@ -22,7 +22,7 @@ for name, version in json.loads((root / 'Packages/manifest.json').read_text())['
     data = json.loads((packages / name / 'package.json').read_text(encoding='utf-8-sig'))
     if data['version'] != version:
         raise RuntimeError('Package version differs from the chosen official Editor: ' + name)
-print('PASS every direct dependency matches bundled Unity 6000.0.65f1 packages')
+print('PASS every direct dependency matches bundled Unity 6000.6.5f1 packages')
 guids = {}
 for meta in sorted((root / 'Assets').rglob('*.meta')):
     guid = re.search(r'^guid: (\w+)', meta.read_text(), re.M).group(1)
@@ -32,9 +32,35 @@ for meta in sorted((root / 'Assets').rglob('*.meta')):
     if not asset.exists():
         raise RuntimeError('Orphaned metadata: ' + str(meta))
     guids[guid] = asset
-for path in list((root / 'Assets').rglob('*.unity')) + list((root / 'Assets').rglob('*.prefab')):
+# Native material/pipeline/mesh references may target bundled package resources.
+package_guids = set()
+for meta in packages.rglob('*.meta'):
+    match = re.search(r'^guid: (\w+)', meta.read_text(errors='replace'), re.M)
+    if match:
+        package_guids.add(match[1])
+for suffix in ['*.unity', '*.prefab', '*.mat', '*.asset']:
+ for path in (root / 'Assets').rglob(suffix):
     for guid in re.findall(r'guid: (\w+)', path.read_text()):
-        if guid not in guids or guids[guid].suffix != '.cs':
-            raise RuntimeError('Missing component script: ' + str(path))
-    print('PASS serialized component script references:', path.relative_to(root))
+        if guid not in guids and guid not in package_guids and not guid.startswith('0000000000000000'):
+            raise RuntimeError('Missing serialized resource ' + guid + ': ' + str(path))
+    if suffix == '*.unity':
+        print('PASS complete scene resource references:', path.relative_to(root))
+pipeline_meta = root / 'Assets/Cosmic/Settings/PC_RPAsset.asset.meta'
+pipeline_guid = re.search(r'^guid: (\w+)', pipeline_meta.read_text(), re.M).group(1)
+graphics = (root / 'ProjectSettings/GraphicsSettings.asset').read_text()
+quality = (root / 'ProjectSettings/QualitySettings.asset').read_text()
+if ('m_CustomRenderPipeline: {fileID: 11400000, guid: ' + pipeline_guid) not in graphics:
+    raise RuntimeError('Global URP pipeline is not assigned.')
+quality_refs = re.findall(r'customRenderPipeline: \{fileID: 11400000, guid: (\w+)', quality)
+if len(quality_refs) != len(re.findall(r'^    name:', quality, re.M)) or any(g != pipeline_guid for g in quality_refs):
+    raise RuntimeError('Some Quality levels are missing the correct URP pipeline.')
+print('PASS global URP and all', len(quality_refs), 'Quality levels assigned')
+solar = (root / 'Assets/Scenes/SolarSystem.unity').read_text()
+for name in ['Sun','Mercury','Venus','Earth','Mars','Jupiter','Saturn','Uranus','Neptune','Moon','Grain Rings','SimulationManager','Space Camera']:
+    if '  m_Name: ' + name + '\n' not in solar:
+        raise RuntimeError('SolarSystem scene missing: ' + name)
+for path in (root / 'Assets/Cosmic/Runtime').glob('*.cs'):
+    if re.search(r'^using UnityEditor', path.read_text(), re.M):
+        raise RuntimeError('Editor dependency leaked into runtime: ' + str(path))
+print('PASS SolarSystem hierarchy and runtime/Editor separation')
 print('NOTE: static checks do not replace Unity scene import/PlayMode.')
